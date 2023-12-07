@@ -22,9 +22,21 @@
 			}
 		},
 		{
+			"path": "pages/suggestion/suggestion",
+			"style": {
+				"navigationBarTitleText":"意见箱"
+			}
+		},
+		{
 			"path": "pages/category/category",
 			"style": {
 				"navigationBarTitleText": "商品分类"
+			}
+		},
+		{
+			"path": "pages/search-result/search-result",
+			"style": {
+				"navigationBarTitleText": "搜索结果"
 			}
 		},
 		{
@@ -64,6 +76,12 @@
 			"style": {
 				"navigationBarTitleText": "商品详情"
 			}
+		},
+		{
+			"path": "pages/coming-soon/coming-soon",
+			"style": {
+				"navigationBarTitleText": "敬请期待"
+			}
 		}
 	],
 	"globalStyle": {
@@ -74,9 +92,9 @@
 	},
 	// 设置 TabBar
 	"tabBar": {
-		"color": "#333",
-		"selectedColor": "#27ba9b",
-		"backgroundColor": "#fff",
+		"color": "black",
+		"selectedColor": "#FFDB8E",
+		"backgroundColor": "white",
 		"borderStyle": "white",
 		"list": [
 			{
@@ -135,7 +153,25 @@
 				{
 					"path": "address-form/address-form",
 					"style": {
-						"navigationBarTitleText": ""
+						"navigationBarTitleText": "我的地址"
+					}
+				},
+				{
+					"path": "priviledge/priviledge",
+					"style": {
+						"navigationBarTitleText": "我的权益"
+					}
+				},
+				{
+					"path": "coupon/coupon",
+					"style": {
+						"navigationBarTitleText": "优惠券"
+					}
+				},
+				{
+					"path": "member-center/member-center",
+					"style": {
+						"navigationBarTitleText": "会员中心"
 					}
 				}
 			]
@@ -167,7 +203,20 @@
 					"style": {
 						"navigationBarTitleText": "订单列表"
 					}
+				},
+				{
+					"path": "comment/comment",
+					"style": {
+						"navigationBarTitleText": "评论页面"
+					}
+				},
+				{
+					"path": "refund/refund",
+					"style": {
+						"navigationBarTitleText": "退款"
+					}
 				}
+				
 			]
 		}
 	],

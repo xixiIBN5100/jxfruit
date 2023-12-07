@@ -1,12 +1,30 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import OrderList from './components/OrderList.vue'
+import CommentBox from '../../components/CommentBox.vue'
+import { onLoad, onReady } from '@dcloudio/uni-app'
+import { useMemberStore } from '@/stores'
+
+const memberStore = useMemberStore()
 
 // 获取页面参数
 const query = defineProps<{
   type: string
 }>()
 
+onLoad(() => {
+  isShow.value = false
+})
+
+const isShow = ref<boolean>()
+const showComment = (params) => {
+  console.log(params)
+  isShow.value = true
+}
+
+const close = () => {
+  isShow.value = false
+}
 // tabs 数据
 const orderTabs = ref([
   { orderState: 0, title: '全部', isRender: false },
@@ -24,6 +42,8 @@ orderTabs.value[activeIndex.value].isRender = true
 
 <template>
   <view class="viewport">
+    <!-- <comment-box></comment-box> -->
+    <CommentBox @close="close" style="position: fixed;z-index: 10" v-if="isShow"></CommentBox>
     <!-- tabs -->
     <view class="tabs">
       <text
@@ -47,7 +67,7 @@ orderTabs.value[activeIndex.value].isRender = true
       <!-- 滑动项 -->
       <swiper-item v-for="item in orderTabs" :key="item.title">
         <!-- 订单列表 -->
-        <OrderList v-if="item.isRender" :order-state="item.orderState" />
+        <OrderList v-if="item.isRender" :order-state="item.orderState" @showComment="showComment" />
       </swiper-item>
     </swiper>
   </view>
@@ -69,6 +89,7 @@ page {
 // tabs
 .tabs {
   display: flex;
+  
   justify-content: space-around;
   line-height: 60rpx;
   margin: 0 10rpx;
@@ -92,7 +113,7 @@ page {
     width: 20%;
     height: 6rpx;
     padding: 0 50rpx;
-    background-color: #27ba9b;
+    background-color: rgb(255,234,189);
     /* 过渡效果 */
     transition: all 0.4s;
   }

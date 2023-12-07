@@ -11,7 +11,7 @@ export enum OrderState {
   /** 已完成 */
   YiWanCheng = 5,
   /** 已取消 */
-  YiQuXiao = 6,
+  YiQuXiao = 6
 }
 /** 订单状态列表 */
 export const orderStateList = [
@@ -22,4 +22,14 @@ export const orderStateList = [
   { id: 4, text: '待评价' },
   { id: 5, text: '已完成' },
   { id: 6, text: '已取消' },
+]
+
+
+export enum CouponState {
+
+}
+
+export const CouponStateList = [
+  { id: 1, },
+  { }
 ]

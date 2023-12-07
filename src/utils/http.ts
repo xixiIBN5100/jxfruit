@@ -12,7 +12,8 @@
 
 import { useMemberStore } from '@/stores'
 
-const baseURL = 'https://pcapi-xiaotuxian-front-devtest.itheima.net'
+const baseURL =  'https://api.familystudy.cn:8083/api'
+// const baseURL = 'https://localhost:8083/api'
 
 // 添加拦截器
 const httpInterceptor = {
@@ -22,6 +23,7 @@ const httpInterceptor = {
     if (!options.url.startsWith('http')) {
       options.url = baseURL + options.url
     }
+   
     // 2. 请求超时, 默认 60s
     options.timeout = 10000
     // 3. 添加小程序端请求头标识
@@ -29,11 +31,14 @@ const httpInterceptor = {
       ...options.header,
       'source-client': 'miniapp',
     }
+
+   
+
     // 4. 添加 token 请求头标识
     const memberStore = useMemberStore()
     const token = memberStore.profile?.token
     if (token) {
-      options.header.Authorization = token
+      options.header.token = token
     }
   },
 }
@@ -54,9 +59,9 @@ uni.addInterceptor('uploadFile', httpInterceptor)
  *    3.3 网络错误 -> 提示用户换网络
  */
 type Data<T> = {
-  code: string
+  code: number
   msg: string
-  result: T
+  data: T
 }
 // 2.2 添加类型，支持泛型
 export const http = <T>(options: UniApp.RequestOptions) => {
@@ -68,6 +73,7 @@ export const http = <T>(options: UniApp.RequestOptions) => {
       success(res) {
         // 状态码 2xx， axios 就是这样设计的
         if (res.statusCode >= 200 && res.statusCode < 300) {
+          console.log("sb", res.data)
           // 2.1 提取核心数据 res.data
           resolve(res.data as Data<T>)
         } else if (res.statusCode === 401) {

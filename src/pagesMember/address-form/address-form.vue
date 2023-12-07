@@ -1,22 +1,21 @@
 <script setup lang="ts">
 import {
-  getMemberAddressByIdAPI,
-  postMemberAddressAPI,
-  putMemberAddressByIdAPI,
+  getAddressById,
+  postAddress,
+  updateAddressById,
 } from '@/services/address'
 import { onLoad } from '@dcloudio/uni-app'
+import { validateHeaderName } from 'http'
+import { fileURLToPath } from 'url'
 import { ref } from 'vue'
 
 // 表单数据
 const form = ref({
-  receiver: '', // 收货人
-  contact: '', // 联系方式
-  fullLocation: '', // 省市区(前端展示)
-  provinceCode: '', // 省份编码(后端参数)
-  cityCode: '', // 城市编码(后端参数)
-  countyCode: '', // 区/县编码(后端参数)
-  address: '', // 详细地址
-  isDefault: 0, // 默认地址，1为是，0为否
+  receiverName: '', // 收货人
+  receiverPhone: '', // 联系方式
+  campus: '', // 省市区(前端展示)
+  roomAddress: '', // 详细地址
+  isDefault: 1, // 默认地址，1为是，0为否
 })
 
 // 获取页面参数
@@ -28,9 +27,9 @@ const query = defineProps<{
 const getMemberAddressByIdData = async () => {
   if (query.id) {
     // 发送请求
-    const res = await getMemberAddressByIdAPI(query.id)
+    const res = await getAddressById(query.id)
     // 把数据合并到表单中
-    Object.assign(form.value, res.result)
+    Object.assign(form.value, res.data)
   }
 }
 
@@ -42,15 +41,15 @@ onLoad(() => {
 // 动态设置标题
 uni.setNavigationBarTitle({ title: query.id ? '修改地址' : '新建地址' })
 
-// 收集所在地区
-const onRegionChange: UniHelper.RegionPickerOnChange = (ev) => {
-  // 省市区(前端展示)
-  form.value.fullLocation = ev.detail.value.join(' ')
-  // 省市区(后端参数)
-  const [provinceCode, cityCode, countyCode] = ev.detail.code!
-  // form.value.provinceCode = provinceCode
-  Object.assign(form.value, { provinceCode, cityCode, countyCode })
-}
+// // 收集所在地区
+// const onRegionChange: UniHelper.RegionPickerOnChange = (ev) => {
+//   // 省市区(前端展示)
+//   form.value.fullLocation = ev.detail.value.join(' ')
+//   // 省市区(后端参数)
+//   const [provinceCode, cityCode, countyCode] = ev.detail.code!
+//   // form.value.provinceCode = provinceCode
+//   Object.assign(form.value, { provinceCode, cityCode, countyCode })
+// }
 
 // 收集是否默认收货地址
 const onSwitchChange: UniHelper.SwitchOnChange = (ev) => {
@@ -59,38 +58,164 @@ const onSwitchChange: UniHelper.SwitchOnChange = (ev) => {
 
 // 定义校验规则
 const rules: UniHelper.UniFormsRules = {
-  receiver: {
+  receiverName: {
     rules: [{ required: true, errorMessage: '请输入收货人姓名' }],
   },
-  contact: {
+  receiverPhone: {
     rules: [
       { required: true, errorMessage: '请输入联系方式' },
       { pattern: /^1[3-9]\d{9}$/, errorMessage: '手机号格式不正确' },
     ],
   },
-  countyCode: {
-    rules: [{ required: true, errorMessage: '请选择所在地区' }],
+  campus: {
+    rules: [{ required: true, errorMessage: '请选择所在校区' }],
   },
-  address: {
-    rules: [{ required: true, errorMessage: '请选择详细地址' }],
+  roomAddress: {
+    rules: [{ required: true, errorMessage: '请选择寝室楼' }],
   },
 }
 
+const campusList = [
+  '朝晖校区', '屏峰校区', '莫干山校区'
+]
+
+const roomAddressList = [
+  {
+    campus: '朝晖校区',
+    item: [
+      '尚01',
+      '尚02',
+      '尚03',
+      '尚04',
+      '尚05',
+      '尚06',
+      '尚07',
+      '尚08',
+      '尚09',
+      '尚10',
+      '尚11',
+      '尚12',
+      '尚13',
+      '尚综合楼',
+      '梦1',
+      '梦2',
+      '梦3',
+      '梦4',
+      '梦5',
+      '梦6',
+      '梦7'
+    ]
+  },
+  {
+    campus: '屏峰校区',
+    item: [
+      '东01', 
+      '东02', 
+      '东03', 
+      '东04', 
+      '东05', 
+      '东06', 
+      '东07', 
+      '东08', 
+      '东09', 
+      '东10', 
+      '东11', 
+      '东12', 
+      '东13', 
+      '东14', 
+      '东15', 
+      '东16', 
+      '东17', 
+      '东18', 
+      '东19',
+      '西01', 
+      '西02', 
+      '西03', 
+      '西04', 
+      '西05', 
+      '西06', 
+      '西07', 
+      '西08', 
+      '西09', 
+      '西10', 
+      '西11', 
+      '西12', 
+      '西13',
+      '西14', 
+      '西15'
+    ]
+  },
+  {
+    campus: '莫干山校区',
+    item: [
+      '德01A',
+      '德01B',
+      '德01C',
+      '德02A',
+      '德02B',
+      '德02C',
+      '德03',
+      '德04',
+      '德05A',
+      '德05B',
+      '德05C',
+      '德06',
+      '德07',
+      '德08',
+      '德09',
+      '德10'
+    ]
+  }
+]
+
+var choosedCampusIndex = 0
+
+const onCampusChange = (e: any) => {
+  console.log(e)
+  const index = e.target.value
+  choosedCampusIndex = index
+  form.value.campus = campusList[index]
+}
+
+const onRoomAddressChange = (e: any) => {
+  const index = e.target.value
+  console.log(index)
+  // choosedCampusIndex = index
+  form.value.roomAddress = roomAddressList[choosedCampusIndex].item[index]
+}
 // 表单组件实例
 const formRef = ref<UniHelper.UniFormsInstance>()
+
 
 // 提交表单
 const onSubmit = async () => {
   try {
-    // 表单校验
-    await formRef.value?.validate?.()
+    if (form.value.receiverName == '' ||
+      form.value.receiverPhone == '' ||
+      form.value.campus == '' ||
+      form.value.roomAddress == '') {
+      return uni.showToast({
+        title: '请填写完整信息',
+        icon: 'error'
+      })
+    }
+    var reg = /^1[3-9]\d{9}$/;
+    if (!reg.test(form.value.receiverPhone)) {
+      return uni.showToast({
+        title: '请填写正确的手机号',
+        icon: 'error'
+      })
+    }
     // 校验通过后再发送请求
+    console.log(query)
     if (query.id) {
       // 修改地址请求
-      await putMemberAddressByIdAPI(query.id, form.value)
+      console.log(form.value)
+
+      await updateAddressById(form.value)
     } else {
       // 新建地址请求
-      await postMemberAddressAPI(form.value)
+      await postAddress(form.value)
     }
     // 成功提示
     uni.showToast({ icon: 'success', title: query.id ? '修改成功' : '添加成功' })
@@ -123,7 +248,7 @@ const onCityChange: UniHelper.UniDataPickerOnChange = (ev) => {
       <!-- 表单内容 -->
       <uni-forms-item name="receiver" class="form-item">
         <text class="label">收货人</text>
-        <input class="input" placeholder="请填写收货人姓名" v-model="form.receiver" />
+        <input class="input" placeholder="请填写收货人姓名" v-model="form.receiverName" />
       </uni-forms-item>
       <uni-forms-item name="contact" class="form-item">
         <text class="label">手机号码</text>
@@ -131,49 +256,57 @@ const onCityChange: UniHelper.UniDataPickerOnChange = (ev) => {
           class="input"
           placeholder="请填写收货人手机号码"
           :maxlength="11"
-          v-model="form.contact"
+          v-model="form.receiverPhone"
         />
       </uni-forms-item>
       <uni-forms-item name="countyCode" class="form-item">
-        <text class="label">所在地区</text>
+        <text class="label">校区</text>
         <!-- #ifdef MP-WEIXIN -->
         <picker
-          @change="onRegionChange"
+          @change="onCampusChange"
           class="picker"
-          mode="region"
-          :value="form.fullLocation.split(' ')"
+          :range="campusList"
         >
-          <view v-if="form.fullLocation">{{ form.fullLocation }}</view>
-          <view v-else class="placeholder">请选择省/市/区(县)</view>
+          <view v-if="form.campus">{{ form.campus }}</view>
+          <view v-else class="placeholder">请选择校区</view>
         </picker>
         <!-- #endif -->
 
         <!-- #ifdef H5 || APP-PLUS -->
-        <uni-data-picker
+        <!-- <uni-data-picker
           placeholder="请选择地址"
           popup-title="请选择城市"
-          collection="opendb-city-china"
           field="code as value, name as text"
           orderby="value asc"
           :step-searh="true"
           self-field="code"
           parent-field="parent_code"
+          :local-data="dataTree"
           @change="onCityChange"
           :clear-icon="false"
           v-model="form.countyCode"
-        />
+        /> -->
         <!-- #endif -->
       </uni-forms-item>
       <uni-forms-item name="address" class="form-item">
         <text class="label">详细地址</text>
-        <input class="input" placeholder="街道、楼牌号等信息" v-model="form.address" />
+        
+        <picker
+          @change="onRoomAddressChange"
+          class="picker"
+        
+          :range="roomAddressList[choosedCampusIndex].item"
+        >
+          <view v-if="form.roomAddress">{{ form.roomAddress }}</view>
+          <view v-else class="placeholder">请选择寝室楼</view>
+        </picker>
       </uni-forms-item>
       <view class="form-item">
         <label class="label">设为默认地址</label>
         <switch
           @change="onSwitchChange"
           class="switch"
-          color="#27ba9b"
+          color="rgb(255,234,189)"
           :checked="form.isDefault === 1"
         />
       </view>
@@ -191,7 +324,7 @@ const onCityChange: UniHelper.UniDataPickerOnChange = (ev) => {
 }
 
 page {
-  background-color: #f4f4f4;
+  background-image: linear-gradient(rgb(255,255,246),rgb(255, 255, 236));
 }
 
 .content {
@@ -255,9 +388,9 @@ page {
 .button {
   height: 80rpx;
   margin: 30rpx 20rpx;
-  color: #fff;
+  color: black;
   border-radius: 80rpx;
   font-size: 30rpx;
-  background-color: #27ba9b;
+  background-color: rgb(255,234,189);
 }
 </style>

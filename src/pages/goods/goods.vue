@@ -4,60 +4,81 @@ import type {
   SkuPopupInstance,
   SkuPopupLocaldata,
 } from '@/components/vk-data-goods-sku-popup/vk-data-goods-sku-popup'
-import { postMemberCartAPI } from '@/services/cart'
-import { getGoodsByIdAPI } from '@/services/goods'
-import type { GoodsResult } from '@/types/goods'
+import { postMemberCart } from '@/services/cart'
+import { getGoodsById, getSkuInfo } from '@/services/goods'
+import { getAddress } from '@/services/address'
+import type { CartItem } from '@/types/cart'
+import type { GoodsItem, GoodsResult, SkuItem, GoodsImageItem } from '@/types/goods'
+import type { AddressItem } from '@/types/address'
 import { onLoad } from '@dcloudio/uni-app'
-import { computed, ref } from 'vue'
+import { computed, ref, onMounted} from 'vue'
 import AddressPanel from './components/AddressPanel.vue'
 import ServicePanel from './components/ServicePanel.vue'
-
+import SharingPanel from './components/SharingPanel.vue'
+import ScalePanel from './components/ScalePanel.vue'
+import { profile } from 'console'
 // 获取屏幕边界到安全区域距离
 const { safeAreaInsets } = uni.getSystemInfoSync()
-
+import { useMemberStore } from '@/stores'
 // 接收页面参数
 const query = defineProps<{
-  id: string
+  id: string,
+  userId: string
 }>()
+
+const selectAddress = (address) => {
+  console.log(address)
+  selectedAddress.value = address
+}
+
+var selectedAddress = ref<AddressItem>()
 
 // 获取商品详情信息
 const goods = ref<GoodsResult>()
 const getGoodsByIdData = async () => {
-  const res = await getGoodsByIdAPI(query.id)
-  goods.value = res.result
+  console.log(query.id)
+  const res = await getGoodsById(query.id)
+  goods.value = res.data
   // SKU组件所需格式
-  localdata.value = {
-    _id: res.result.id,
-    name: res.result.name,
-    goods_thumb: res.result.mainPictures[0],
-    spec_list: res.result.specs.map((v) => {
-      return {
-        name: v.name,
-        list: v.values,
-      }
-    }),
-    sku_list: res.result.skus.map((v) => {
-      return {
-        _id: v.id,
-        goods_id: res.result.id,
-        goods_name: res.result.name,
-        image: v.picture,
-        price: v.price * 100, // 注意：需要乘以 100
-        stock: v.inventory,
-        sku_name_arr: v.specs.map((vv) => vv.valueName),
-      }
-    }),
-  }
+  // localdata.value = {
+  //   _id: res.data.id,
+  //   name: res.data.goodsName,
+  //   price: res.data.price,
+  //   imgUrl: res.data.imgUrl
+  // }
 }
 
 // 页面加载
 onLoad(() => {
+  const memberStore = useMemberStore()
+  console.log(query.userId)
   getGoodsByIdData()
+  if (memberStore.profile) {
+    getUserAddress()
+  }
+  getGoodsScaleList()
 })
+
+
+
+const address = ref<AddressItem[]>()
+
+const getUserAddress = async () => {
+  const res = await getAddress()
+  console.log(res.data)
+  address.value = res.data
+}
+
+const sku = ref<SkuItem[]>()
+const getGoodsScaleList = async () => {
+  const res = await getSkuInfo(query.id)
+  sku.value = res.data
+}
 
 // 轮播图变化时
 const currentIndex = ref(0)
 const onChange: UniHelper.SwiperOnChange = (ev) => {
+  console.log(ev.detail.current)
   currentIndex.value = ev.detail.current
 }
 
@@ -66,7 +87,7 @@ const onTapImage = (url: string) => {
   // 大图预览
   uni.previewImage({
     current: url,
-    urls: goods.value!.mainPictures,
+    urls: goods.value!.images.map(item => item.imgUrl)
   })
 }
 
@@ -77,7 +98,7 @@ const popup = ref<{
 }>()
 
 // 弹出层条件渲染
-const popupName = ref<'address' | 'service'>()
+const popupName = ref<'address' | 'service' | 'scale' | 'share'>()
 const openPopup = (name: typeof popupName.value) => {
   // 修改弹出层名称
   popupName.value = name
@@ -93,63 +114,79 @@ enum SkuMode {
   Cart = 2,
   Buy = 3,
 }
-const mode = ref<SkuMode>(SkuMode.Cart)
+var mode = ref<SkuMode>(SkuMode.Cart)
 // 打开SKU弹窗修改按钮模式
 const openSkuPopup = (val: SkuMode) => {
-  // 显示SKU弹窗
-  isShowSku.value = true
-  // 修改按钮模式
+  popupName.value = 'scale',
+  popup.value?.open()
+  // // 显示SKU弹窗
+  // isShowSku.value = true
+  // // 修改按钮模式
   mode.value = val
 }
+
+const childComponentRef = ref(null)
+
 // SKU组件实例
 const skuPopupRef = ref<SkuPopupInstance>()
 // 计算被选中的值
 const selectArrText = computed(() => {
   return skuPopupRef.value?.selectArr?.join(' ').trim() || '请选择商品规格'
 })
-// 加入购物车事件
-const onAddCart = async (ev: SkuPopupEvent) => {
-  await postMemberCartAPI({ skuId: ev._id, count: ev.buy_num })
-  uni.showToast({ title: '添加成功' })
-  isShowSku.value = false
+// // 加入购物车事件
+// const onAddCart = async (ev: CartItem) => {
+//   await postMemberCart({ id: ev.id, count: ev.num })
+//   uni.showToast({ title: '添加成功' })
+//   isShowSku.value = false
+// }
+// // 立即购买
+// const onBuyNow = (ev: SkuPopupEvent) => {
+//   uni.navigateTo({ url: `/pagesOrder/create/create` })
+// }
+
+const toComment = (id: string) => {
+  uni.navigateTo({url: `/pagesOrder/comment/comment?goodsId=${id}`})
 }
-// 立即购买
-const onBuyNow = (ev: SkuPopupEvent) => {
-  uni.navigateTo({ url: `/pagesOrder/create/create?skuId=${ev._id}&count=${ev.buy_num}` })
+
+const addCart = () => {
+  console.log("goods")
+  if (goods.value?.goodsInfo.onShelf !== 0) { openSkuPopup(SkuMode.Cart) }
+  else {  
+    uni.showToast({
+      title: '该商品已下架',
+      icon: 'none'
+    })
+  }
+}
+
+const buyNow = () => {
+  console.log("goods")
+  if (goods.value?.goodsInfo.onShelf !== 0) { openSkuPopup(SkuMode.Buy) }
+  else {  
+    uni.showToast({
+      title: '该商品已下架',
+      icon: 'none'
+    })
+  }
 }
 </script>
 
 <template>
-  <!-- SKU弹窗组件 -->
-  <vk-data-goods-sku-popup
-    v-model="isShowSku"
-    :localdata="localdata"
-    :mode="mode"
-    add-cart-background-color="#FFA868"
-    buy-now-background-color="#27BA9B"
-    ref="skuPopupRef"
-    :actived-style="{
-      color: '#27BA9B',
-      borderColor: '#27BA9B',
-      backgroundColor: '#E9F8F5',
-    }"
-    @add-cart="onAddCart"
-    @buy-now="onBuyNow"
-  />
   <scroll-view enable-back-to-top scroll-y class="viewport">
     <!-- 基本信息 -->
     <view class="goods">
       <!-- 商品主图 -->
       <view class="preview">
-        <swiper @change="onChange" circular>
-          <swiper-item v-for="item in goods?.mainPictures" :key="item">
-            <image class="image" @tap="onTapImage(item)" mode="aspectFill" :src="item" />
+        <swiper @change="onChange">
+          <swiper-item v-for="item in goods?.images">
+            <image @click="onTapImage" class="image"  mode="aspectFill" :src="item?.imgUrl"  />
+            <!-- <image class="fruit-logo" src="../../static/images/logo.jpg"></image> -->
           </swiper-item>
         </swiper>
         <view class="indicator">
           <text class="current">{{ currentIndex + 1 }}</text>
           <text class="split">/</text>
-          <text class="total">{{ goods?.mainPictures.length }}</text>
+          <text class="total">{{ goods?.images.length }}</text>
         </view>
       </view>
 
@@ -157,73 +194,48 @@ const onBuyNow = (ev: SkuPopupEvent) => {
       <view class="meta">
         <view class="price">
           <text class="symbol">¥</text>
-          <text class="number">{{ goods?.price }}</text>
+          <text class="number">{{ goods?.goodsInfo.price }}</text>
+          <view class="share-btn" @click="openPopup('share')"></view>
         </view>
-        <view class="name ellipsis">{{ goods?.name }}</view>
-        <view class="desc"> {{ goods?.desc }} </view>
+        <view class="name ellipsis">{{ goods?.goodsInfo.goodsName }}</view>
+        <view class="desc"> {{ goods?.goodsInfo.description }} </view>       
       </view>
-
       <!-- 操作面板 -->
       <view class="action">
-        <view @tap="openSkuPopup(SkuMode.Both)" class="item arrow">
+        <view @tap="openSkuPopup(SkuMode.Both);" class="item arrow">
           <text class="label">选择</text>
           <text class="text ellipsis"> {{ selectArrText }} </text>
         </view>
         <view @tap="openPopup('address')" class="item arrow">
           <text class="label">送至</text>
-          <text class="text ellipsis"> 请选择收获地址 </text>
+          <text class="text ellipsis">  {{ selectedAddress?.campus || '请选择收获地址'}} {{ selectedAddress?.roomAddress }}  </text>
         </view>
         <view @tap="openPopup('service')" class="item arrow">
           <text class="label">服务</text>
-          <text class="text ellipsis"> 无忧退 快速退款 免费包邮 </text>
+          <text class="text ellipsis">  破损包退 最优质的售后服务 </text>
         </view>
       </view>
     </view>
 
     <!-- 商品详情 -->
     <view class="detail panel">
-      <view class="title">
-        <text>详情</text>
+      <view class="title" @tap="toComment(query.id)">
+        <text class="item arrow">评论 {{ goods?.commentNum }}
+          <text class="all">查看全部</text>
+        </text>
       </view>
-      <view class="content">
-        <view class="properties">
-          <!-- 属性详情 -->
-          <view class="item" v-for="item in goods?.details.properties" :key="item.name">
-            <text class="label">{{ item.name }}</text>
-            <text class="value">{{ item.value }}</text>
+      <view class="comment">
+        <template v-for="(item, index) in goods?.comments.slice(0,3)" :key="index">
+          <view>
+            <view class="purchaser">
+              <img class="avatar" :src="item.avatarUrl" alt="">
+              <text class="name">{{ item.publisher }}</text>
+            </view>
+            <view class="content">{{ item.content }}</view>
           </view>
-        </view>
-        <!-- 图片详情 -->
-        <image
-          class="image"
-          v-for="item in goods?.details.pictures"
-          :key="item"
-          mode="widthFix"
-          :src="item"
-        ></image>
+        </template>
       </view>
-    </view>
-
-    <!-- 同类推荐 -->
-    <view class="similar panel">
-      <view class="title">
-        <text>同类推荐</text>
-      </view>
-      <view class="content">
-        <navigator
-          v-for="item in goods?.similarProducts"
-          :key="item.id"
-          class="goods"
-          hover-class="none"
-          :url="`/pages/goods/goods?id=${item.id}`"
-        >
-          <image class="image" mode="aspectFill" :src="item.picture"></image>
-          <view class="name ellipsis">{{ item.name }}</view>
-          <view class="price">
-            <text class="symbol">¥</text>
-            <text class="number">{{ item.price }}</text>
-          </view>
-        </navigator>
+      <view style="height: 200rpx">
       </view>
     </view>
   </scroll-view>
@@ -242,15 +254,27 @@ const onBuyNow = (ev: SkuPopupEvent) => {
       </navigator>
     </view>
     <view class="buttons">
-      <view @tap="openSkuPopup(SkuMode.Cart)" class="addcart"> 加入购物车 </view>
-      <view @tap="openSkuPopup(SkuMode.Buy)" class="payment"> 立即购买 </view>
+      <view class="addcart" :class="[ goods?.goodsInfo.onShelf === 0 ? 'under-shelf': '' ]"
+        @click="addCart"> 
+        加入购物车 
+      </view>
+      <view class="payment" :class="[ goods?.goodsInfo.onShelf === 0 ? 'under-shelf': '' ]" 
+        @click="buyNow"> 
+        立即购买 
+      </view>
     </view>
   </view>
 
   <!-- uni-ui 弹出层 -->
   <uni-popup ref="popup" type="bottom" background-color="#fff">
-    <AddressPanel v-if="popupName === 'address'" @close="popup?.close()" />
+    <AddressPanel 
+    @selectAddress="selectAddress"
+    :addressList="address" v-if="popupName === 'address'" @close="popup?.close()" />
     <ServicePanel v-if="popupName === 'service'" @close="popup?.close()" />
+    <ScalePanel ref="scale" :mode="mode" :goodsInfo="goods" v-if="popupName === 'scale'" @close="popup?.close()" />
+    <SharingPanel ref="share" :id="id" :mode="mode"  v-if="popupName === 'share'"
+     @close="popup?.close()"  :goodsInfo="goods"
+    />
   </uni-popup>
 </template>
 
@@ -260,7 +284,7 @@ page {
   overflow: hidden;
   display: flex;
   flex-direction: column;
-}
+} 
 
 .viewport {
   background-color: #f4f4f4;
@@ -282,13 +306,25 @@ page {
       font-size: 28rpx;
       color: #333;
       font-weight: 600;
-      border-left: 4rpx solid #27ba9b;
+      border-left: 4rpx solid rgb(255,234,189);
     }
     navigator {
       font-size: 24rpx;
       color: #666;
     }
   }
+}
+
+.share-btn {
+  position: absolute;
+  top: 40rpx;
+  right: 20rpx;
+  width: 50rpx;
+  height: 50rpx;
+  text-align: center;
+  line-height: 50rpx;
+  background-image: url('https://image.familystudy.cn/image/jxfruit/share.webp');
+  background-size: contain;
 }
 
 .arrow {
@@ -302,6 +338,12 @@ page {
     font-size: 32rpx;
     transform: translateY(-50%);
   }
+
+  .all{
+    position: absolute;
+    right: 70rpx;
+    font-weight: normal;
+  }
 }
 
 /* 商品信息 */
@@ -311,8 +353,19 @@ page {
     height: 750rpx;
     position: relative;
     .image {
+      position: relative;
+      z-index: 8;
       width: 750rpx;
       height: 750rpx;
+    }
+    .fruit-logo {
+      position: absolute;
+      width: 300rpx;
+      z-index: 10;
+      height: 300rpx;
+      bottom: 400rpx;
+      left: 30rpx;
+
     }
     .indicator {
       height: 40rpx;
@@ -343,10 +396,10 @@ page {
     .price {
       height: 130rpx;
       padding: 25rpx 30rpx 0;
-      color: #fff;
+      color: rgb(255, 0, 0);
       font-size: 34rpx;
       box-sizing: border-box;
-      background-color: #35c8a9;
+      background-color: rgb(255,234,189);
     }
     .number {
       font-size: 56rpx;
@@ -370,7 +423,8 @@ page {
       line-height: 1;
       padding: 0 20rpx 30rpx;
       font-size: 24rpx;
-      color: #cf4444;
+      color: #000000;
+      white-space: pre-wrap;
     }
   }
   .action {
@@ -408,6 +462,7 @@ page {
     .image {
       width: 100%;
     }
+    
   }
   .properties {
     padding: 0 20rpx;
@@ -470,6 +525,30 @@ page {
   }
 }
 
+
+.comment {
+  padding-left: 20rpx;
+  .purchaser {
+    font-weight: 700;
+    .avatar {
+      width: 80rpx;
+      height: 80rpx;
+      border-radius: 50%;
+    }
+  }
+  .name {
+    font-size: 28rpx;
+    margin-left: 20rpx;
+  }
+  .content {
+    padding-left: 20rpx;
+    padding-right: 20rpx;
+    margin-top: 10rpx;
+    font-size: 28rpx;
+  }
+}
+
+
 /* 底部工具栏 */
 .toolbar {
   position: fixed;
@@ -494,13 +573,20 @@ page {
       font-size: 26rpx;
       color: #fff;
       border-radius: 72rpx;
+
+      
     }
     .addcart {
-      background-color: #ffa868;
+      background-color: rgb(255,234,189);
+      color: black;
     }
     .payment {
-      background-color: #27ba9b;
+      background-color: #ffa868;  
       margin-left: 20rpx;
+      color: black;
+    }
+    .under-shelf {
+      background: rgb(191, 191, 191);
     }
   }
   .icons {

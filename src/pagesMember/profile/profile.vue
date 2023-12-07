@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { getMemberProfileAPI, putMemberProfileAPI } from '@/services/profile'
+import { getProfile, updateProfile } from '@/services/profile'
 import { useMemberStore } from '@/stores'
 import type { Gender, ProfileDetail } from '@/types/member'
 import { formatDate } from '@/utils'
@@ -12,11 +12,11 @@ const { safeAreaInsets } = uni.getSystemInfoSync()
 // 获取个人信息，修改个人信息需提供初始值
 const profile = ref({} as ProfileDetail)
 const getMemberProfileData = async () => {
-  const res = await getMemberProfileAPI()
-  profile.value = res.result
+  const res = await getProfile()
+  profile.value = res.data
   // 同步 Store 的头像和昵称，用于我的页面展示
-  memberStore.profile!.avatar = res.result.avatar
-  memberStore.profile!.nickname = res.result.nickname
+  memberStore.profile!.avatarUrl = res.data.avatarUrl
+  memberStore.profile!.nickName = res.data.nickName
 }
 
 onLoad(() => {
@@ -30,20 +30,20 @@ const onAvatarChange = () => {
   // 选择图片条件编译
   // #ifdef H5 || APP-PLUS
   // 微信小程序从基础库 2.21.0 开始， wx.chooseImage 停止维护，请使用 uni.chooseMedia 代替
-  uni.chooseImage({
-    count: 1,
-    success: (res) => {
-      // 文件路径
-      const tempFilePaths = res.tempFilePaths
-      // 上传
-      uploadFile(tempFilePaths[0])
-    },
-  })
+  // uni.chooseImage({
+  //   count: 1,
+  //   success: (res) => {
+  //     // 文件路径
+  //     const tempFilePaths = res.tempFilePaths
+  //     // 上传
+  //     uploadFile(tempFilePaths[0])
+  //   },
+  // })
   // #endif
-
   // #ifdef MP-WEIXIN
   // uni.chooseMedia 仅支持微信小程序端
-  uni.chooseMedia({
+  console.log("上传头像")
+  wx.chooseMedia({
     // 文件个数
     count: 1,
     // 文件类型
@@ -62,16 +62,20 @@ const onAvatarChange = () => {
 const uploadFile = (file: string) => {
   // 文件上传
   uni.uploadFile({
-    url: '/member/profile/avatar',
+    url: '/profile/upload',
     name: 'file',
     filePath: file,
+    // header: {
+    //   token: memberStore.profile?.token
+    // },
     success: (res) => {
       if (res.statusCode === 200) {
-        const avatar = JSON.parse(res.data).result.avatar
+        console.log("res", res);
+        const avatar = JSON.parse(res.data).data.avatarUrl
         // 个人信息页数据更新
-        profile.value!.avatar = avatar
+        profile.value!.avatarUrl = avatar
         // Store头像更新
-        memberStore.profile!.avatar = avatar
+        memberStore.profile!.avatarUrl = avatar
         uni.showToast({ icon: 'success', title: '更新成功' })
       } else {
         uni.showToast({ icon: 'error', title: '出现错误' })
@@ -85,33 +89,25 @@ const onGenderChange: UniHelper.RadioGroupOnChange = (ev) => {
   profile.value.gender = ev.detail.value as Gender
 }
 
-// 修改生日
-const onBirthdayChange: UniHelper.DatePickerOnChange = (ev) => {
-  profile.value.birthday = ev.detail.value
+const choosedCampusIndex = ref<number>(0)
+
+const onCampusChange = (e: any) => {
+  console.log(e)
+  const index = e.target.value
+  choosedCampusIndex.value = index
+  profile.value.campus = campusList[index]
 }
 
-// 修改城市
-let fullLocationCode: [string, string, string] = ['', '', '']
-const onFullLocationChange: UniHelper.RegionPickerOnChange = (ev) => {
-  // 修改前端界面
-  profile.value.fullLocation = ev.detail.value.join(' ')
-  // 提交后端更新
-  fullLocationCode = ev.detail.code!
-}
+const campusList = [
+  '朝晖校区', '屏峰校区', '莫干山校区'
+]
+
 
 // 点击保存提交表单
 const onSubmit = async () => {
-  const { nickname, gender, birthday } = profile.value
-  const res = await putMemberProfileAPI({
-    nickname,
-    gender,
-    birthday,
-    provinceCode: fullLocationCode[0],
-    cityCode: fullLocationCode[1],
-    countyCode: fullLocationCode[2],
-  })
+  const res = await updateProfile(profile.value)
   // 更新Store昵称
-  memberStore.profile!.nickname = res.result.nickname
+  memberStore.profile!.nickname = profile.nickName
   uni.showToast({ icon: 'success', title: '保存成功' })
   setTimeout(() => {
     uni.navigateBack()
@@ -129,7 +125,7 @@ const onSubmit = async () => {
     <!-- 头像 -->
     <view class="avatar">
       <view @tap="onAvatarChange" class="avatar-content">
-        <image class="image" :src="profile?.avatar" mode="aspectFill" />
+        <image class="image" :src="profile?.avatarUrl" mode="aspectFill" />
         <text class="text">点击修改头像</text>
       </view>
     </view>
@@ -139,57 +135,69 @@ const onSubmit = async () => {
       <view class="form-content">
         <view class="form-item">
           <text class="label">账号</text>
-          <text class="account placeholder">{{ profile?.account }}</text>
+          <input class="input" type="text" placeholder="请填写账号" v-model="profile.username">
         </view>
+        
         <view class="form-item">
           <text class="label">昵称</text>
-          <input class="input" type="text" placeholder="请填写昵称" v-model="profile!.nickname" />
+          <input class="input" type="text" placeholder="请填写昵称" v-model="profile!.nickName" />
         </view>
         <view class="form-item">
           <text class="label">性别</text>
           <radio-group @change="onGenderChange">
             <label class="radio">
-              <radio value="男" color="#27ba9b" :checked="profile?.gender === '男'" />
+              <radio value="男" color="rgb(255,234,189)" :checked="profile?.gender === '男'" />
               男
             </label>
             <label class="radio">
-              <radio value="女" color="#27ba9b" :checked="profile?.gender === '女'" />
+              <radio value="女" color="rgb(255,234,189)" :checked="profile?.gender === '女'" />
               女
             </label>
           </radio-group>
         </view>
-        <view class="form-item">
-          <text class="label">生日</text>
-          <picker
-            @change="onBirthdayChange"
-            mode="date"
-            class="picker"
-            :value="profile?.birthday"
-            start="1900-01-01"
-            :end="formatDate(new Date())"
-          >
-            <view v-if="profile?.birthday">{{ profile?.birthday }}</view>
-            <view class="placeholder" v-else>请选择日期</view>
-          </picker>
-        </view>
         <!-- 只有微信小程序端内置了省市区数据 -->
         <!-- #ifdef MP-WEIXIN -->
-        <view class="form-item">
-          <text class="label">城市</text>
-          <picker
-            @change="onFullLocationChange"
-            mode="region"
-            class="picker"
-            :value="profile?.fullLocation?.split(' ')"
-          >
-            <view v-if="profile?.fullLocation">{{ profile.fullLocation }}</view>
-            <view class="placeholder" v-else>请选择城市</view>
-          </picker>
-        </view>
+       
         <!-- #endif -->
         <view class="form-item">
-          <text class="label">职业</text>
-          <input class="input" type="text" placeholder="请填写职业" :value="profile?.profession" />
+          <text class="label">学号</text>
+          <input class="input" type="text" placeholder="请填写学号"
+           :maxlength="12"
+           :minlength="12"
+            v-model="profile.stuNo" />
+        </view>
+        <!-- <view class="form-item">
+          <text class="label">校区</text>
+          <input class="input" type="text" placeholder="请填写校区" v-model="profile.campus" />
+        </view> -->
+        <view class="form-item">
+        <text class="label">校区</text>
+        <!-- #ifdef MP-WEIXIN -->
+        <picker
+          @change="onCampusChange"
+          class="picker"
+          :range="campusList"
+        >
+          <view v-if="profile.campus">{{ profile.campus }}</view>
+          <view v-else class="placeholder">请选择校区</view>
+        </picker>
+        <!-- #endif -->
+
+        <!-- #ifdef H5 || APP-PLUS -->
+        <!-- <uni-data-picker
+          placeholder="请选择地址"
+          popup-title="请选择城市"
+          field="code as value, name as text"
+          orderby="value asc"
+          :step-searh="true"
+          self-field="code"
+          parent-field="parent_code"
+          :local-data="dataTree"
+          @change="onCityChange"
+          :clear-icon="false"
+          v-model="form.countyCode"
+        /> -->
+        <!-- #endif -->
         </view>
       </view>
       <!-- 提交按钮 -->
@@ -207,9 +215,9 @@ page {
   display: flex;
   flex-direction: column;
   height: 100%;
-  background-image: url(https://pcapi-xiaotuxian-front-devtest.itheima.net/miniapp/images/order_bg.png);
-  background-size: auto 420rpx;
-  background-repeat: no-repeat;
+  background-color: rgb(255,234,189);
+  // background-size: auto 420rpx;
+  // background-repeat: no-repeat;
 }
 
 // 导航栏
@@ -223,7 +231,7 @@ page {
     align-items: center;
     font-size: 16px;
     font-weight: 500;
-    color: #fff;
+    color: black;
   }
 
   .back {
@@ -232,7 +240,7 @@ page {
     width: 40px;
     left: 0;
     font-size: 20px;
-    color: #fff;
+    color: black;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -261,7 +269,7 @@ page {
     padding-top: 20rpx;
     line-height: 1;
     font-size: 26rpx;
-    color: #fff;
+    color: black;
   }
 }
 
@@ -321,10 +329,10 @@ page {
     text-align: center;
     line-height: 80rpx;
     margin: 30rpx 20rpx;
-    color: #fff;
+    color: black;
     border-radius: 80rpx;
     font-size: 30rpx;
-    background-color: #27ba9b;
+    background-color: rgb(255,234,189);
   }
 }
 </style>

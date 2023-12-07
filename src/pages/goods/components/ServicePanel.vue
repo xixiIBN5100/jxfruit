@@ -14,22 +14,26 @@ const emit = defineEmits<{
     <!-- 内容 -->
     <view class="content">
       <view class="item">
-        <view class="dt">无忧退货</view>
+        <view class="dt">快速送达</view>
         <view class="dd">
-          自收到商品之日起30天内，可在线申请无忧退货服务（食品等特殊商品除外）
+          当日达服务：0：00-14：00下单，预计当日下午17：30-18:30左右送达。
+          次日达服务：14:00至24:00下单，预计次天下午17：30-18:30左右送达。
+          如有延迟配送情况，我们将通过短信通知您。
         </view>
       </view>
       <view class="item">
-        <view class="dt">快速退款</view>
+        <view class="dt">联系客服</view>
         <view class="dd">
-          收到退货包裹并确认无误后，将在48小时内办理退款，
-          退款将原路返回，不同银行处理时间不同，预计1-5个工作日到账
+          如偶遇水果磕伤等问题，请联系企业微信客服。如有疑问，可直接拨打19884192559（微信同号）。
+          微信客服服务时间：9:00~22:00
         </view>
       </view>
       <view class="item">
-        <view class="dt">满88元免邮费</view>
+        <view class="dt">优质团队</view>
         <view class="dd">
-          单笔订单金额(不含运费)满88元可免邮费，不满88元， 单笔订单收取10元邮费
+          践行鲜果是工大人自己的水果团购平台，为您提供高品质、新鲜的水果，满足校园生活的美味需求。
+          期待为您送上美味的水果！
+           <view style="text-align: right;">浙工大众创空间入驻学生团队——践行鲜生</view> 
         </view>
       </view>
     </view>

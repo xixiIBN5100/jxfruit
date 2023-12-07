@@ -1,24 +1,23 @@
 <script setup lang="ts">
-import { useGuessList } from '@/composables'
 import { OrderState, orderStateList } from '@/services/constants'
 import {
-  deleteMemberOrderAPI,
-  getMemberOrderByIdAPI,
-  getMemberOrderCancelByIdAPI,
-  getMemberOrderLogisticsByIdAPI,
-  getMemberOrderConsignmentByIdAPI,
-  putMemberOrderReceiptByIdAPI,
+  deleteMemberOrder,
+  getMemberOrderById,
+  getMemberOrderCancelById,
+  // getMemberOrderLogisticsByIdAPI,
+  // getMemberOrderConsignmentByIdAPI,
+  putMemberOrderReceiptById
 } from '@/services/order'
-import type { LogisticItem, OrderResult } from '@/types/order'
+import CommentBox from '../../components/CommentBox.vue'
+// import type { LogisticItem, OrderResult } from '@/types/order'
 import { onLoad, onReady } from '@dcloudio/uni-app'
 import { ref } from 'vue'
 import PageSkeleton from './components/PageSkeleton.vue'
-import { getPayMockAPI, getPayWxPayMiniPayAPI } from '@/services/pay'
+import { getPayWxPayMiniPay, wxPay} from '@/services/pay'
 
 // 获取屏幕边界到安全区域距离
 const { safeAreaInsets } = uni.getSystemInfoSync()
-// 猜你喜欢
-const { guessRef, onScrolltolower } = useGuessList()
+
 // 弹出层组件
 const popup = ref<UniHelper.UniPopupInstance>()
 // 取消原因列表
@@ -33,9 +32,9 @@ const reasonList = ref([
 // 订单取消原因
 const reason = ref('')
 // 复制内容
-const onCopy = (id: string) => {
+const onCopy = (orderNo: string) => {
   // 设置系统剪贴板的内容
-  uni.setClipboardData({ data: id })
+  uni.setClipboardData({ data: String(orderNo) })
 }
 // 获取页面参数
 const query = defineProps<{
@@ -86,27 +85,31 @@ onReady(() => {
 // 获取订单详情
 const order = ref<OrderResult>()
 const getMemberOrderByIdData = async () => {
-  const res = await getMemberOrderByIdAPI(query.id)
-  order.value = res.result
-  if (
-    [OrderState.DaiShouHuo, OrderState.DaiPingJia, OrderState.YiWanCheng].includes(
-      order.value.orderState,
-    )
-  ) {
-    getMemberOrderLogisticsByIdData()
-  }
+  const res = await getMemberOrderById(Number(query.id))
+  order.value = res.data
+  // if (
+  //   [OrderState.DaiShouHuo, OrderState.DaiPingJia, OrderState.YiWanCheng].includes(
+  //     order.value.orderState,
+  //   )
+  // ) 
+  // {
+    // getMemberOrderLogisticsByIdData()
+  // }
 }
 
-// 获取物流信息
-const logisticList = ref<LogisticItem[]>([])
-const getMemberOrderLogisticsByIdData = async () => {
-  const res = await getMemberOrderLogisticsByIdAPI(query.id)
-  logisticList.value = res.result.list
-}
+// // 获取物流信息
+// const logisticList = ref<LogisticItem[]>([])
+// const getMemberOrderLogisticsByIdData = async () => {
+//   const res = await getMemberOrderLogisticsByIdAPI(query.id)
+//   logisticList.value = res.result.list
+// }
 
 onLoad(() => {
   getMemberOrderByIdData()
+  isShow.value = false
 })
+
+const emit = defineEmits(['showComment'])
 
 // 倒计时结束事件
 const onTimeup = () => {
@@ -116,35 +119,40 @@ const onTimeup = () => {
 
 // 订单支付
 const onOrderPay = async () => {
-  if (import.meta.env.DEV) {
-    // 开发环境模拟支付
-    await getPayMockAPI({ orderId: query.id })
-  } else {
-    // #ifdef MP-WEIXIN
-    // 正式环境微信支付
-    const res = await getPayWxPayMiniPayAPI({ orderId: query.id })
-    await wx.requestPayment(res.result)
-    // #endif
-
-    // #ifdef H5 || APP-PLUS
-    // H5端 和 App 端未开通支付-模拟支付体验
-    await getPayMockAPI({ orderId: query.id })
-    // #endif
-  }
-  // 关闭当前页，再跳转支付结果页
-  uni.redirectTo({ url: `/pagesOrder/payment/payment?id=${query.id}` })
+  const res = await wxPay({
+    amount: Math.round(order.value.payMoney * 100),
+    orderId: query.id
+  })
+  wx.requestPayment({
+    timeStamp: res.data.timeStamp, // 时间戳，从1970年1月1日00:00:00至今的秒数，即当前的时间
+    nonceStr: res.data.nonceStr, // 随机字符串，长度为32个字符以下。
+    package: res.data.package, // 统一下单接口返回的 prepay_id 参数值，格式如“prepay_id=*”
+    signType: res.data.signType, // 签名算法类型，默认为 MD5，支持RSA等其他加密算法
+    paySign: res.data.paySign, // 签名，详见签名生成算法
+    success: function (response) { 
+      // 支付成功后的回调函数， res.errMsg = 'requestPayment:ok'
+      console.log(response)
+      uni.redirectTo({ url: `/pagesOrder/payment/payment?id=${query.id}` })
+    },
+    fail: function (response) { 
+      console.log(response)
+      // 支付失败或取消支付后的回调函数， res.errMsg = 'requestPayment:fail cancel' 取消支付；res.errMsg = 'requestPayment:fail (detail error message)'
+    }
+  })  
 }
 
-// 是否为开发环境
-const isDev = import.meta.env.DEV
+
 // 模拟发货
-const onOrderSend = async () => {
-  if (isDev) {
-    await getMemberOrderConsignmentByIdAPI(query.id)
-    uni.showToast({ icon: 'success', title: '模拟发货完成' })
-    // 主动更新订单状态
-    order.value!.orderState = OrderState.DaiShouHuo
-  }
+const onRefund = async (id: number) => {
+  uni.navigateTo({
+    url: `../refund/refund?orderId=${query.id}&id=${id}`
+  })
+  // if (isDev) {
+  //   await getMemberOrderConsignmentByIdAPI(query.id)
+  //   uni.showToast({ icon: 'success', title: '模拟发货完成' })
+  //   // 主动更新订单状态
+  //   order.value!.orderState = OrderState.DaiShouHuo
+  // }
 }
 // 确认收货
 const onOrderConfirm = () => {
@@ -154,9 +162,9 @@ const onOrderConfirm = () => {
     confirmColor: '#27BA9B',
     success: async (success) => {
       if (success.confirm) {
-        const res = await putMemberOrderReceiptByIdAPI(query.id)
+        const res = await putMemberOrderReceiptById(query.id)
         // 更新订单状态
-        order.value = res.result
+        order.value = res.data
       }
     },
   })
@@ -169,23 +177,36 @@ const onOrderDelete = () => {
     confirmColor: '#27BA9B',
     success: async (success) => {
       if (success.confirm) {
-        await deleteMemberOrderAPI({ ids: [query.id] })
+        await deleteMemberOrder(query.id)
         uni.redirectTo({ url: '/pagesOrder/list/list' })
       }
     },
   })
 }
 
+const isShow = ref<boolean>()
+
+const close = () => {
+  isShow.value = false
+}
+
+const onComment = (id: number) => {
+  console.log("评价", id)
+  isShow.value = true
+  uni.setStorageSync("goodsId", id)
+}
+
 // 取消订单
 const onOrderCancel = async () => {
   // 发送请求
-  const res = await getMemberOrderCancelByIdAPI(query.id, { cancelReason: reason.value })
+  const res = await getMemberOrderCancelById(query.id, { cancelReason: reason.value })
   // 更新订单信息
-  order.value = res.result
+  order.value = res.data
   // 关闭弹窗
   popup.value?.close!()
   // 轻提示
   uni.showToast({ icon: 'none', title: '订单取消成功' })
+  uni.navigateBack()
 }
 </script>
 
@@ -203,6 +224,7 @@ const onOrderCancel = async () => {
       <view class="title">订单详情</view>
     </view>
   </view>
+  <CommentBox @close="close" style="position: fixed;z-index: 10" v-if="isShow"></CommentBox>
   <scroll-view
     enable-back-to-top
     scroll-y
@@ -212,7 +234,7 @@ const onOrderCancel = async () => {
   >
     <template v-if="order">
       <!-- 订单状态 -->
-      <view class="overview" :style="{ paddingTop: safeAreaInsets!.top + 20 + 'px' }">
+      <view class="overview" :style="{ paddingTop: safeAreaInsets?.top + 20 + 'px' }">
         <!-- 待付款状态:展示倒计时 -->
         <template v-if="order.orderState === OrderState.DaiFuKuan">
           <view class="status icon-clock">等待付款</view>
@@ -220,7 +242,7 @@ const onOrderCancel = async () => {
             <text class="money">应付金额: ¥ {{ order.payMoney }}</text>
             <text class="time">支付剩余</text>
             <uni-countdown
-              :second="order.countdown"
+              :minute="2"
               color="#fff"
               splitor-color="#fff"
               :show-day="false"
@@ -237,19 +259,13 @@ const onOrderCancel = async () => {
           <view class="button-group">
             <navigator
               class="button"
-              :url="`/pagesOrder/create/create?orderId=${query.id}`"
+              :url="`/pagesOrder/create/create?orderId=${query.id}&type=3`"
               hover-class="none"
             >
               再次购买
             </navigator>
             <!-- 待发货状态：模拟发货,开发期间使用,用于修改订单状态为已发货 -->
-            <view
-              v-if="isDev && order.orderState == OrderState.DaiFaHuo"
-              @tap="onOrderSend"
-              class="button"
-            >
-              模拟发货
-            </view>
+         
             <!-- 待收货状态: 展示确认收货按钮 -->
             <view
               v-if="order.orderState === OrderState.DaiShouHuo"
@@ -272,8 +288,8 @@ const onOrderCancel = async () => {
         </view>
         <!-- 用户收货地址 -->
         <view class="locate">
-          <view class="user"> {{ order.receiverContact }} {{ order.receiverMobile }} </view>
-          <view class="address"> {{ order.receiverAddress }} </view>
+          <view class="user"> {{ order.address.receiverName }} {{ order.address.receiverPhone }} </view>
+          <view class="address"> {{ order.address.campus }} {{ order.address.roomAddress }} </view>
         </view>
       </view>
 
@@ -284,26 +300,35 @@ const onOrderCancel = async () => {
             class="navigator"
             v-for="item in order.skus"
             :key="item.id"
-            :url="`/pages/goods/goods?id=${item.spuId}`"
+            :url="`/pages/goods/goods?id=${item.goodsId}`"
             hover-class="none"
           >
-            <image class="cover" :src="item.image"></image>
+            <image class="cover" :src="item.thumbNail"></image>
             <view class="meta">
-              <view class="name ellipsis">{{ item.name }}</view>
-              <view class="type">{{ item.attrsText }}</view>
+              <view class="name ellipsis">{{ item.goodsName }}</view>
+              <view class="type">{{ item.scale }}</view>
               <view class="price">
                 <view class="actual">
                   <text class="symbol">¥</text>
-                  <text>{{ item.curPrice }}</text>
+                  <text>{{ item.price }}</text>
                 </view>
               </view>
-              <view class="quantity">x{{ item.quantity }}</view>
+             
+            </view>
+            <view>
+                <view  v-if="order.orderState === OrderState.DaiPingJia
+                && item.is_commented === 0"
+                  @tap.stop="onComment(item.goodsId)" class="button"> 去评价 
+                </view>
+                <view v-if="order.orderState !== OrderState.DaiFuKuan"
+                  @tap.stop="onRefund(item.id)" class="button refund"> 申请退款 
+                </view>
+                <view class="quantity">x{{ item.num }}</view>
             </view>
           </navigator>
           <!-- 待评价状态:展示按钮 -->
           <view class="action" v-if="order.orderState === OrderState.DaiPingJia">
-            <view class="button primary">申请售后</view>
-            <navigator url="" class="button"> 去评价 </navigator>
+            <button open-type="contact" class="button primary">联系客服</button>
           </view>
         </view>
         <!-- 合计 -->
@@ -328,14 +353,14 @@ const onOrderCancel = async () => {
         <view class="title">订单信息</view>
         <view class="row">
           <view class="item">
-            订单编号: {{ query.id }} <text class="copy" @tap="onCopy(query.id)">复制</text>
+            订单编号: {{ order.orderTradeNo }} <text class="copy" @tap="onCopy(order.orderTradeNo)">复制</text>
           </view>
-          <view class="item">下单时间: {{ order.createTime }}</view>
+          <view class="item">
+            订单号: {{ order.orderId }} <text class="copy" @tap="onCopy(order.orderId)">复制</text>
+          </view>
+          <view class="item">下单时间: {{ order.submitTime }}</view>
         </view>
       </view>
-
-      <!-- 猜你喜欢 -->
-      <XtxGuess ref="guessRef" />
 
       <!-- 底部操作栏 -->
       <view class="toolbar-height" :style="{ paddingBottom: safeAreaInsets?.bottom + 'px' }"></view>
@@ -349,7 +374,7 @@ const onOrderCancel = async () => {
         <template v-else>
           <navigator
             class="button secondary"
-            :url="`/pagesOrder/create/create?orderId=${query.id}`"
+            :url="`/pagesOrder/create/create?orderId=${query.id}&type=3`"
             hover-class="none"
           >
             再次购买
@@ -363,7 +388,7 @@ const onOrderCancel = async () => {
             确认收货
           </view>
           <!-- 待评价状态: 展示去评价 -->
-          <view class="button" v-if="order.orderState === OrderState.DaiPingJia"> 去评价 </view>
+          <!-- <view class="button" v-if="order.orderState === OrderState.DaiPingJia"> 去评价 </view> -->
           <!-- 待评价/已完成/已取消 状态: 展示删除订单 -->
           <view
             class="button delete"
@@ -449,6 +474,10 @@ page {
   background-color: #f7f7f8;
 }
 
+.refund {
+    margin-top: 30rpx;
+  }
+
 .overview {
   display: flex;
   flex-direction: column;
@@ -456,8 +485,8 @@ page {
 
   line-height: 1;
   padding-bottom: 30rpx;
-  color: #fff;
-  background-image: url(https://pcapi-xiaotuxian-front-devtest.itheima.net/miniapp/images/order_bg.png);
+  color: #000;
+  background-color: rgb(255,234,189);
   background-size: cover;
 
   .status {
@@ -494,10 +523,11 @@ page {
     text-align: center;
     line-height: 64rpx;
     font-size: 28rpx;
-    color: #27ba9b;
+    color: #000;
     border-radius: 68rpx;
     background-color: #fff;
   }
+  
 }
 
 .shipment {
@@ -626,13 +656,7 @@ page {
       color: #444;
     }
 
-    .action {
-      display: flex;
-      flex-direction: row-reverse;
-      justify-content: flex-start;
-      padding: 30rpx 0 0;
-
-      .button {
+    .button {
         width: 200rpx;
         height: 60rpx;
         text-align: center;
@@ -645,9 +669,29 @@ page {
         color: #444;
       }
 
+    .action {
+      // display: flex;
+      // flex-direction: row-reverse;
+      // justify-content: flex-start;
+      
+
+      // .button {
+      //   margin: 0 auto;
+      //   width: 200rpx;
+      //   height: 60rpx;
+      //   text-align: center;
+      //   justify-content: center;
+      //   line-height: 60rpx;
+      //   margin-left: 20rpx;
+      //   border-radius: 60rpx;
+      //   border: 1rpx solid #ccc;
+      //   font-size: 26rpx;
+      //   color: #444;
+      // }
+
       .primary {
-        color: #27ba9b;
-        border-color: #27ba9b;
+        color: rgb(255, 174, 0);
+        border-color: rgb(255, 174, 0);
       }
     }
   }
@@ -758,14 +802,14 @@ page {
 
   .secondary {
     order: 2;
-    color: #27ba9b;
-    border-color: #27ba9b;
+    color: rgb(255, 174, 0);
+    border-color: rgb(255, 174, 0);
   }
 
   .primary {
     order: 1;
-    color: #fff;
-    background-color: #27ba9b;
+    color: #000;
+    background-color: rgb(255,234,189);
   }
 }
 
@@ -807,7 +851,7 @@ page {
     .icon.checked::before {
       content: '\e6cc';
       font-size: 38rpx;
-      color: #27ba9b;
+      color: rgb(255,234,189);
     }
   }
 
@@ -831,7 +875,7 @@ page {
 
     .primary {
       color: #fff;
-      background-color: #27ba9b;
+      background-color: rgb(255,234,189);
       border: none;
     }
   }

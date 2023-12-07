@@ -3,15 +3,74 @@
   display: flex;
   flex-wrap: wrap;
   min-height: 508rpx;
-  margin: 20rpx 20rpx 0;
+  margin: 20rpx auto;
+  width: max-content;
   border-radius: 10rpx;
-  background-color: #fff;
+  
+  .top {
+    display: flex;
+    justify-content: space-between;
+    width: 700rpx;
+  }
+
+  .bottom {
+    display: flex;
+    justify-content: space-between;
+    width: 700rpx;
+  }
+
+  .top-item {
+    height: 250rpx;
+    width: 335rpx;
+    border-radius: 20rpx;
+    background-color: white;
+    margin-top: 60rpx;
+    text-align: center;
+    line-height: 250rpx;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+
+  .bottom-item {
+    margin-top: 35rpx;
+    width: 215rpx;
+    height: 160rpx;
+    border-radius: 20rpx;
+    background-color: white;
+    text-align: center;
+    line-height: 150rpx;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+
+    .text {
+      font-size: 30rpx;
+    }
+  }
+
+  .image {
+    margin: 0 auto;
+  }
+
+  .text {
+    font-weight: bold;
+    text-align: center;
+    height: 40rpx;
+    line-height: 50rpx;
+    font-size: 35rpx;
+    margin-bottom: 5%;
+    text-align: center;
+  }
+
 
   .title {
     display: flex;
     align-items: center;
-    padding: 24rpx 24rpx 0;
-    font-size: 32rpx;
+    padding: 24rpx 0 0 0;
+    font-size: 30rpx;
+    margin: 0 auto;
+    
     color: #262626;
     position: relative;
     .title-desc {
@@ -21,27 +80,6 @@
     }
   }
 
-  .item {
-    display: flex;
-    flex-direction: column;
-    width: 50%;
-    height: 254rpx;
-    border-right: 1rpx solid #eee;
-    border-top: 1rpx solid #eee;
-    .title {
-      justify-content: start;
-    }
-    &:nth-child(2n) {
-      border-right: 0 none;
-    }
-    &:nth-child(-n + 2) {
-      border-top: 0 none;
-    }
-    .image {
-      width: 150rpx;
-      height: 150rpx;
-    }
-  }
   .cards {
     flex: 1;
     padding: 15rpx 20rpx;

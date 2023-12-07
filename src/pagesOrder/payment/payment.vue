@@ -35,8 +35,6 @@ const { guessRef, onScrolltolower } = useGuessList()
       </view>
     </view>
 
-    <!-- 猜你喜欢 -->
-    <XtxGuess ref="guessRef" />
   </scroll-view>
 </template>
 

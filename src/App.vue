@@ -10,6 +10,7 @@ onShow(() => {
 onHide(() => {
   console.log('App Hide')
 })
+
 </script>
 
 <style lang="scss">

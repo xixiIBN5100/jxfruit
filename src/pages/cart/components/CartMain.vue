@@ -2,13 +2,14 @@
 import type { InputNumberBoxEvent } from '@/components/vk-data-input-number-box/vk-data-input-number-box'
 import { useGuessList } from '@/composables'
 import {
-  deleteMemberCartAPI,
-  getMemberCartAPI,
-  putMemberCartBySkuIdAPI,
-  putMemberCartSelectedAPI,
+  deleteMemberCart,
+  getMemberCart,
+  putMemberCartBySkuId,
+  putMemberCartSelected,
+  putMemberCartAllSelected
 } from '@/services/cart'
 import { useMemberStore } from '@/stores'
-import type { CartItem } from '@/types/cart'
+import type { CartItem, CartGoodsItem } from '@/types/cart'
 import { onShow } from '@dcloudio/uni-app'
 import { computed, ref } from 'vue'
 
@@ -22,15 +23,25 @@ const { safeAreaInsets } = uni.getSystemInfoSync()
 
 // 获取会员Store
 const memberStore = useMemberStore()
-
 // 获取购物车数据
-const cartList = ref<CartItem[]>([])
+const cartList = ref<CartGoodsItem[]>([])
 // 优化购物车空列表状态，默认展示列表
 const showCartList = ref(true)
 const getMemberCartData = async () => {
-  const res = await getMemberCartAPI()
-  cartList.value = res.result
-  showCartList.value = res.result.length > 0
+  const res = await getMemberCart()
+  console.log("data", res)
+  cartList.value = res.data
+  showCartList.value = res.data.length > 0
+  if (selectedCartListCount.value > 0) {
+    wx.setTabBarBadge({//tabbar右上角添加文本
+        index: 2,//tabbar下标
+        text: String(selectedCartListCount.value) //显示的内容,必须为字符串可通过toString()将number转为字符串
+    })
+  } else {
+    wx.removeTabBarBadge({
+      index: 2
+    })
+  }
 }
 
 // 初始化调用: 页面显示触发
@@ -45,13 +56,24 @@ const onDeleteCart = (skuId: string) => {
   // 弹窗二次确认
   uni.showModal({
     content: '是否删除',
-    confirmColor: '#27BA9B',
+    confirmColor: 'rgb(255,234,189)',
     success: async (res) => {
       if (res.confirm) {
+        // console.log("id", [skuId])
         // 后端删除单品
-        await deleteMemberCartAPI({ ids: [skuId] })
+        await deleteMemberCart( Number(skuId) )
         // 重新获取列表
         getMemberCartData()
+        if (selectedCartListCount.value > 0) {
+          wx.setTabBarBadge({//tabbar右上角添加文本
+              index: 2,//tabbar下标
+              text: String(selectedCartListCount.value) //显示的内容,必须为字符串可通过toString()将number转为字符串
+          })
+        } else {
+          wx.removeTabBarBadge({
+            index: 2
+          })
+        }
       }
     },
   })
@@ -59,50 +81,87 @@ const onDeleteCart = (skuId: string) => {
 
 // 修改商品数量
 const onChangeCount = (ev: InputNumberBoxEvent) => {
-  putMemberCartBySkuIdAPI(ev.index, { count: ev.value })
+  putMemberCartBySkuId(ev.index,  ev.value )
+  if (selectedCartListCount.value > 0) {
+    wx.setTabBarBadge({//tabbar右上角添加文本
+        index: 2,//tabbar下标
+        text: String(selectedCartListCount.value) //显示的内容,必须为字符串可通过toString()将number转为字符串
+    })
+  } else {
+    wx.removeTabBarBadge({
+      index: 2
+    })
+  }
 }
 
 // 修改选中状态-单品修改
-const onChangeSelected = (item: CartItem) => {
+const onChangeSelected = (item: CartGoodsItem) => {
   // 前端数据更新-是否选中取反
   item.selected = !item.selected
+  if (selectedCartListCount.value > 0) {
+    wx.setTabBarBadge({//tabbar右上角添加文本
+      index: 2,//tabbar下标
+      text: String(selectedCartListCount.value) //显示的内容,必须为字符串可通过toString()将number转为字符串
+    })
+  } else {
+    wx.removeTabBarBadge({
+      index: 2
+    })
+  }
   // 后端数据更新
-  putMemberCartBySkuIdAPI(item.skuId, { selected: item.selected })
+  putMemberCartSelected(item.id)
 }
 
 // 计算全选状态
 const isSelectedAll = computed(() => {
-  return cartList.value.length && cartList.value.every((v) => v.selected)
+  return cartList.value.length && cartList.value.every((v: CartGoodsItem) => v.selected)
 })
 
 // 修改选中状态-全选修改
 const onChangeSelectedAll = () => {
   // 全选状态取反
   const _isSelectedAll = !isSelectedAll.value
+  console.log("---------------------")
   // 前端数据更新
   cartList.value.forEach((item) => {
     item.selected = _isSelectedAll
   })
+  if (selectedCartListCount.value > 0) {
+    wx.setTabBarBadge({//tabbar右上角添加文本
+        index: 2,//tabbar下标
+        text: String(selectedCartListCount.value) //显示的内容,必须为字符串可通过toString()将number转为字符串
+    })
+  } else {
+    wx.removeTabBarBadge({
+      index: 2
+    })
+  }
   // 后端数据更新
-  putMemberCartSelectedAPI({ selected: _isSelectedAll })
+  putMemberCartAllSelected(_isSelectedAll)
 }
 
 // 计算选中单品列表
 const selectedCartList = computed(() => {
-  return cartList.value.filter((v) => v.selected)
+  return cartList.value.filter((v: CartGoodsItem) => v.selected)
 })
 
 // 计算选中总件数
 const selectedCartListCount = computed(() => {
-  return selectedCartList.value.reduce((sum, item) => sum + item.count, 0)
+  return selectedCartList.value.reduce((sum: any, item: any) => sum + item.selected * item.num, 0)
 })
 
 // 计算选中总金额
 const selectedCartListMoney = computed(() => {
   return selectedCartList.value
-    .reduce((sum, item) => sum + item.count * item.nowPrice, 0)
+    .reduce((sum, item) => sum + item.num * item.price, 0)
     .toFixed(2)
 })
+
+const toIndex = () => {
+  uni.switchTab ({
+    url: '../index/index'
+  })
+}
 
 // 结算按钮
 const gotoPayment = () => {
@@ -111,13 +170,18 @@ const gotoPayment = () => {
       icon: 'none',
       title: '请选择商品',
     })
+  } else if (selectedCartListMoney.value < 10) {
+    return uni.showToast({
+      title: '10元起购',
+      icon: 'error'
+    })
+    // setTimeout(()=>{
+    //   uni.navigateBack()
+    // },1000)
   }
   // 跳转到结算页
-  uni.navigateTo({ url: '/pagesOrder/create/create' })
+  uni.navigateTo({ url: '/pagesOrder/create/create?type=1' })
 }
-
-// 猜你喜欢
-const { guessRef, onScrolltolower } = useGuessList()
 </script>
 
 <template>
@@ -127,14 +191,17 @@ const { guessRef, onScrolltolower } = useGuessList()
       <!-- 购物车列表 -->
       <view class="cart-list" v-if="showCartList">
         <!-- 优惠提示 -->
-        <view class="tips">
+        <!-- <view class="tips">
           <text class="label">满减</text>
           <text class="desc">满1件, 即可享受9折优惠</text>
-        </view>
+        </view> -->
         <!-- 滑动操作分区 -->
+        <view class="tips">
+          <view class="label">左滑可删除购物车中商品</view>
+        </view>
         <uni-swipe-action>
           <!-- 滑动操作项 -->
-          <uni-swipe-action-item v-for="item in cartList" :key="item.skuId" class="cart-swipe">
+          <uni-swipe-action-item v-for="item in cartList" :key="item.id" class="cart-swipe">
             <!-- 商品信息 -->
             <view class="goods">
               <!-- 选中状态 -->
@@ -144,24 +211,23 @@ const { guessRef, onScrolltolower } = useGuessList()
                 :class="{ checked: item.selected }"
               ></text>
               <navigator
-                :url="`/pages/goods/goods?id=${item.id}`"
+                :url="`/pages/goods/goods?id=${item.goodsId}`"
                 hover-class="none"
                 class="navigator"
               >
-                <image mode="aspectFill" class="picture" :src="item.picture"></image>
+                <image mode="aspectFill" class="picture" :src="item.thumbNail"></image>
                 <view class="meta">
-                  <view class="name ellipsis">{{ item.name }}</view>
-                  <view class="attrsText ellipsis">{{ item.attrsText }}</view>
-                  <view class="price">{{ item.nowPrice }}</view>
+                  <view class="name ellipsis">{{ item.goodsName }}</view>
+                  <view class="attrsText ellipsis">{{ item.scale }}</view>
+                  <view class="price">{{ item.price }}</view>
                 </view>
               </navigator>
               <!-- 商品数量 -->
               <view class="count">
                 <vk-data-input-number-box
-                  v-model="item.count"
+                  v-model="item.num"
                   :min="1"
-                  :max="item.stock"
-                  :index="item.skuId"
+                  :index="item.id"
                   @change="onChangeCount"
                 />
               </view>
@@ -169,7 +235,7 @@ const { guessRef, onScrolltolower } = useGuessList()
             <!-- 右侧删除按钮 -->
             <template #right>
               <view class="cart-swipe-right">
-                <button @tap="onDeleteCart(item.skuId)" class="button delete-button">删除</button>
+                <button @tap="onDeleteCart(item.id)" class="button delete-button">删除</button>
               </view>
             </template>
           </uni-swipe-action-item>
@@ -179,9 +245,9 @@ const { guessRef, onScrolltolower } = useGuessList()
       <view class="cart-blank" v-else>
         <image src="/static/images/blank_cart.png" class="image" />
         <text class="text">购物车还是空的，快来挑选好货吧</text>
-        <navigator url="/pages/index/index" hover-class="none">
+        <view @tap="toIndex" hover-class="none">
           <button class="button">去首页看看</button>
-        </navigator>
+        </view>
       </view>
       <!-- 吸底工具栏 -->
       <view
@@ -211,7 +277,7 @@ const { guessRef, onScrolltolower } = useGuessList()
       </navigator>
     </view>
     <!-- 猜你喜欢 -->
-    <XtxGuess ref="guessRef" />
+    <!-- <XtxGuess ref="guessRef" /> -->
     <!-- 底部占位空盒子 -->
     <view class="toolbar-height"></view>
   </scroll-view>
@@ -236,7 +302,6 @@ const { guessRef, onScrolltolower } = useGuessList()
 // 购物车列表
 .cart-list {
   padding: 0 20rpx;
-
   // 优惠提示
   .tips {
     display: flex;
@@ -245,13 +310,13 @@ const { guessRef, onScrolltolower } = useGuessList()
     margin: 30rpx 10rpx;
     font-size: 26rpx;
     color: #666;
-
     .label {
-      color: #fff;
-      padding: 7rpx 15rpx 5rpx;
+      color: #000;
+      font-weight: bold;
+      padding: 10rpx 15rpx 10rpx;
       border-radius: 4rpx;
       font-size: 24rpx;
-      background-color: #27ba9b;
+      background-color:  rgb(255,234,189);
       margin-right: 10rpx;
     }
   }
@@ -288,7 +353,7 @@ const { guessRef, onScrolltolower } = useGuessList()
 
       &.checked::before {
         content: '\e6cc';
-        color: #27ba9b;
+        color:  rgb(255,234,189);
       }
     }
 
@@ -415,8 +480,8 @@ const { guessRef, onScrolltolower } = useGuessList()
     margin-top: 20rpx;
     font-size: 26rpx;
     border-radius: 60rpx;
-    color: #fff;
-    background-color: #27ba9b;
+    color: black;
+    background-color: rgb(255,234,189);
   }
 }
 
@@ -454,7 +519,7 @@ const { guessRef, onScrolltolower } = useGuessList()
 
   .checked::before {
     content: '\e6cc';
-    color: #27ba9b;
+    color:  rgb(255,234,189);
   }
 
   .text {
@@ -494,8 +559,8 @@ const { guessRef, onScrolltolower } = useGuessList()
     }
 
     .payment-button {
-      background-color: #27ba9b;
-
+      background-color:  rgb(255,234,189);
+      color: black;
       &.disabled {
         opacity: 0.6;
       }

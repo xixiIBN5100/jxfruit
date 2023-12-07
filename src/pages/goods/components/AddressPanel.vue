@@ -1,34 +1,64 @@
 <script setup lang="ts">
-//
+
+import { onLoad } from '@dcloudio/uni-app'
+import { computed, ref, onMounted} from 'vue'
+import type { AddressItem } from '@/types/address'
+import { getAddress } from '@/services/address'
+// 子调父
+const emit = defineEmits<{
+  (event: 'close'): void,
+  (event: 'selectAddress'): AddressItem
+}>()
+
+
+const props = defineProps<{
+  addressList: AddressItem[]
+}>()
+
+
+onMounted(() => {
+  activeIndex.value = 0
+})
+
+var activeIndex = ref<number> ()
+
+const checkAddress = (index: number) => {
+  activeIndex.value = index
+}
+
+var selectedAddress = ref<AddressItem>()
+
+const confirmAddress = () => {
+  selectedAddress.value = props.addressList[activeIndex.value] 
+  emit('close')
+  emit('selectAddress', selectedAddress.value)
+}
 </script>
 
 <template>
   <view class="address-panel">
     <!-- 关闭按钮 -->
-    <text class="close icon-close"></text>
+    <text class="close icon-close" @tap="emit('close')"></text>
     <!-- 标题 -->
     <view class="title">配送至</view>
     <!-- 内容 -->
     <view class="content">
-      <view class="item">
-        <view class="user">李明 13824686868</view>
-        <view class="address">北京市顺义区后沙峪地区安平北街6号院</view>
-        <text class="icon icon-checked"></text>
-      </view>
-      <view class="item">
-        <view class="user">王东 13824686868</view>
-        <view class="address">北京市顺义区后沙峪地区安平北街6号院</view>
-        <text class="icon icon-ring"></text>
-      </view>
-      <view class="item">
-        <view class="user">张三 13824686868</view>
-        <view class="address">北京市朝阳区孙河安平北街6号院</view>
-        <text class="icon icon-ring"></text>
-      </view>
+      <template v-for="(item, index) in addressList" :key="item.id">
+        <view class="item">
+          <view class="user">{{ item.receiverName }} {{ item.receiverPhone }} </view>
+          <view class="address">{{ item.campus }} {{ item.roomAddress }}</view>
+          <text class="icon" @click="checkAddress(index)" :class="activeIndex === index ? 'icon-checked': 'icon-check'"></text>
+        </view>
+      </template>
     </view>
     <view class="footer">
-      <view class="button primary"> 新建地址 </view>
-      <view v-if="false" class="button primary">确定</view>
+      
+      <view class="button primary" @click="addAddress"> 
+        <navigator hover-class="none" url="/pagesMember/address-form/address-form">
+          新建地址
+        </navigator>
+      </view>
+      <view  class="button primary" @click="confirmAddress">确定</view>
     </view>
   </view>
 </template>
@@ -79,7 +109,7 @@
     right: 0;
   }
   .icon-checked {
-    color: #27ba9b;
+    color: rgb(255,234,189);
   }
   .icon-ring {
     color: #444;
@@ -113,12 +143,13 @@
   }
 
   .primary {
-    color: #fff;
-    background-color: #27ba9b;
+    color: #000;
+    background-color: rgb(255,234,189);
   }
 
   .secondary {
     background-color: #ffa868;
+    
   }
 }
 </style>

@@ -94,15 +94,16 @@ export type SkuPopupProps = {
 /**  商品信息本地数据源 */
 export type SkuPopupLocaldata = {
   /** 商品 ID */
-  _id: string
+  _id: number
   /** 商品名称 */
   name: string
   /** 商品图片 */
-  goods_thumb: string
-  /** 商品规格列表 */
-  spec_list: SkuPopupSpecItem[]
-  /** 商品SKU列表 */
-  sku_list: SkuPopupSkuItem[]
+  imgUrl: string,
+  price: number
+  // /** 商品规格列表 */
+  // spec_list: SkuPopupSpecItem[]
+  // /** 商品SKU列表 */
+  // sku_list: SkuPopupSkuItem[]
 }
 
 /** 商品规格名称的集合 */

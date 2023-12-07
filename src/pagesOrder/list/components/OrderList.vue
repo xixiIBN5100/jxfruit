@@ -1,14 +1,17 @@
 <script setup lang="ts">
 import { OrderState } from '@/services/constants'
 import { orderStateList } from '@/services/constants'
-import { putMemberOrderReceiptByIdAPI } from '@/services/order'
-import { deleteMemberOrderAPI } from '@/services/order'
-import { getMemberOrderAPI } from '@/services/order'
-import { getPayMockAPI, getPayWxPayMiniPayAPI } from '@/services/pay'
+import { putMemberOrderReceiptById } from '@/services/order'
+import { deleteMemberOrder } from '@/services/order'
+import { getMemberOrder } from '@/services/order'
+
+import { getPayWxPayMiniPay, wxPay } from '@/services/pay'
+import { useMemberStore } from '@/stores/index'
 import type { OrderItem } from '@/types/order'
 import type { OrderListParams } from '@/types/order'
 import { onMounted, ref } from 'vue'
 
+const memberStore = useMemberStore()
 // 获取屏幕边界到安全区域距离
 const { safeAreaInsets } = uni.getSystemInfoSync()
 
@@ -19,15 +22,18 @@ const props = defineProps<{
 
 // 请求参数
 const queryParams: Required<OrderListParams> = {
-  page: 1,
+  pageNum: 1,
   pageSize: 5,
   orderState: props.orderState,
 }
+
+const emit = defineEmits(['showComment'])
 
 // 获取订单列表
 const orderList = ref<OrderItem[]>([])
 // 是否加载中标记，用于防止滚动触底触发多次请求
 const isLoading = ref(false)
+
 const getMemberOrderData = async () => {
   // 如果数据出于加载中，退出函数
   if (isLoading.value) return
@@ -38,19 +44,21 @@ const getMemberOrderData = async () => {
   // 发送请求前，标记为加载中
   isLoading.value = true
   // 发送请求
-  const res = await getMemberOrderAPI(queryParams)
+  const res = await getMemberOrder(queryParams)
   // 发送请求后，重置标记
   isLoading.value = false
   // 数组追加
-  orderList.value.push(...res.result.items)
-  // 分页条件
-  if (queryParams.page < res.result.pages) {
-    // 页码累加
-    queryParams.page++
+  orderList.value.push(...res.data.records)
+  // // 分页条件
+  if (queryParams.pageNum < res.data.pages) {
+  //   // 页码累加
+    queryParams.pageNum++
   } else {
-    // 分页已结束
+  //   // 分页已结束
     isFinish.value = true
   }
+
+  console.log("res", res.data.records)
 }
 
 onMounted(() => {
@@ -58,54 +66,66 @@ onMounted(() => {
 })
 
 // 订单支付
-const onOrderPay = async (id: string) => {
-  if (import.meta.env.DEV) {
-    // 开发环境模拟支付
-    await getPayMockAPI({ orderId: id })
-  } else {
-    // #ifdef MP-WEIXIN
-    // 正式环境微信支付
-    const res = await getPayWxPayMiniPayAPI({ orderId: id })
-    await wx.requestPayment(res.result)
-    // #endif
-
-    // #ifdef H5 || APP-PLUS
-    // H5端 和 App 端未开通支付-模拟支付体验
-    await getPayMockAPI({ orderId: id })
-    // #endif
-  }
-  // 成功提示
-  uni.showToast({ title: '支付成功' })
-  // 更新订单状态
-  const order = orderList.value.find((v) => v.id === id)
-  order!.orderState = OrderState.DaiFaHuo
+const onOrderPay = async (myOrder) => {
+  const res = await wxPay({
+    amount: Math.round(myOrder.payMoney * 100),
+    orderId: myOrder.orderId
+  })
+  wx.requestPayment({
+    timeStamp: res.data.timeStamp, // 时间戳，从1970年1月1日00:00:00至今的秒数，即当前的时间
+    nonceStr: res.data.nonceStr,   // 随机字符串，长度为32个字符以下。
+    package: res.data.package,     // 统一下单接口返回的 prepay_id 参数值，格式如“prepay_id=*”
+    signType: res.data.signType,   // 签名算法类型，默认为 MD5，支持RSA等其他加密算法
+    paySign: res.data.paySign,     // 签名，详见签名生成算法
+    success: function (response) { 
+      // 支付成功后的回调函数， res.errMsg = 'requestPayment:ok'
+      console.log(response)
+      // 更新订单状态
+      const order = orderList.value.find((v) => v.orderId === id)
+      order!.orderState = OrderState.DaiFaHuo
+      // uni.redirectTo({ url: `/pagesOrder/payment/payment?id=${query.id}` })
+    },
+    fail: function (response) { 
+      console.log(response)
+      // 支付失败或取消支付后的回调函数， res.errMsg = 'requestPayment:fail cancel' 取消支付；res.errMsg = 'requestPayment:fail (detail error message)'
+    }
+  })  
 }
 
 // 确认收货
-const onOrderConfirm = (id: string) => {
+const onOrderConfirm = (id: number) => {
   uni.showModal({
     content: '为保障您的权益，请收到货并确认无误后，再确认收货',
     confirmColor: '#27BA9B',
     success: async (res) => {
       if (res.confirm) {
-        await putMemberOrderReceiptByIdAPI(id)
+        console.log("id", id)
+        await putMemberOrderReceiptById(id)
         uni.showToast({ icon: 'success', title: '确认收货成功' })
-        // 确认成功，更新为待评价
-        const order = orderList.value.find((v) => v.id === id)
-        order!.orderState = OrderState.DaiPingJia
+        orderList.value = orderList.value.filter((v) => v.orderId !== id)
       }
-    },
+    }
   })
 }
 
+const onComment = (item: any) => {
+  if (item.isCommented === 0) {
+    emit('showComment', true)
+    uni.setStorageSync("goodsId", item.goodsId)
+    uni.setStorageSync("skuId", item.id)
+    uni.setStorageSync("orderId", item.orderId)
+  }
+}
+
 // 删除订单
-const onOrderDelete = (id: string) => {
+const onOrderDelete = (id: number) => {
   uni.showModal({
     content: '你确定要删除该订单？',
     confirmColor: '#27BA9B',
     success: async (res) => {
       if (res.confirm) {
-        await deleteMemberOrderAPI({ ids: [id] })
+        console.log("id", id)
+        await deleteMemberOrder(id)
         // 删除成功，界面中删除订单
         const index = orderList.value.findIndex((v) => v.id === id)
         orderList.value.splice(index, 1)
@@ -123,7 +143,7 @@ const onRefresherrefresh = async () => {
   // 开始动画
   isTriggered.value = true
   // 重置数据
-  queryParams.page = 1
+  queryParams.pageNum = 1
   orderList.value = []
   isFinish.value = false
   // 加载数据
@@ -143,33 +163,52 @@ const onRefresherrefresh = async () => {
     @refresherrefresh="onRefresherrefresh"
     @scrolltolower="getMemberOrderData"
   >
-    <view class="card" v-for="order in orderList" :key="order.id">
+    <view class="card" v-for="order in orderList" :key="order.orderId">
       <!-- 订单信息 -->
       <view class="status">
-        <text class="date">{{ order.createTime }}</text>
+        <text class="date">{{ order.submitTime }}</text>
         <!-- 订单状态文字 -->
         <text>{{ orderStateList[order.orderState].text }}</text>
         <!-- 待评价/已完成/已取消 状态: 展示删除订单 -->
         <text
           v-if="order.orderState >= OrderState.DaiPingJia"
           class="icon-delete"
-          @tap="onOrderDelete(order.id)"
-        ></text>
+          @tap="onOrderDelete(order.orderId)"
+        >
+        </text>
       </view>
       <!-- 商品信息，点击商品跳转到订单详情，不是商品详情 -->
       <navigator
         v-for="item in order.skus"
         :key="item.id"
         class="goods"
-        :url="`/pagesOrder/detail/detail?id=${order.id}`"
+        :url="`/pagesOrder/detail/detail?id=${order.orderId}`"
         hover-class="none"
       >
         <view class="cover">
-          <image class="image" mode="aspectFit" :src="item.image"></image>
+          <image class="image" mode="aspectFit" :src="item.thumbNail"></image>
         </view>
         <view class="meta">
-          <view class="name ellipsis">{{ item.name }}</view>
-          <view class="type">{{ item.attrsText }}</view>
+          <view class="name">订单号: {{ item.orderId }}</view>
+          <view class="sku-title">
+            <view class="name ellipsis">{{ item.goodsName }}</view>
+            
+            <view class="num">x{{ item.num }}</view>
+          </view>
+          
+          <view class="type">{{ item.scale }}</view>
+          <view style="display: flex;align-items: center;justify-content: space-between;">
+            <view class="single-price"> ￥ {{ item.price }} </view>
+
+            <view
+              v-if="order.orderState === OrderState.DaiPingJia"
+              class="button primary"
+              @tap.stop="onComment(item)"
+            >
+            <!-- {{ order.goodsId }} -->
+              {{ item.isCommented === 0? '去评价': '已评价' }} 
+            </view>
+          </view>
         </view>
       </navigator>
       <!-- 支付信息 -->
@@ -182,21 +221,28 @@ const onRefresherrefresh = async () => {
       <view class="action">
         <!-- 待付款状态：显示去支付按钮 -->
         <template v-if="order.orderState === OrderState.DaiFuKuan">
-          <view class="button primary" @tap="onOrderPay(order.id)">去支付</view>
+          <view class="button primary" @tap="onOrderPay(order)">去支付</view>
         </template>
         <template v-else>
           <navigator
             class="button secondary"
-            :url="`/pagesOrder/create/create?orderId=${order.id}`"
+            :url="`/pagesOrder/create/create?orderId=${order.orderId}&type=3`"
             hover-class="none"
           >
             再次购买
           </navigator>
+          <!-- <navigator
+            class="button secondary"
+            :url="`/pagesOrder/refund/refund?orderId=${order.orderId}&orderState=${order.orderState}`"
+            hover-class="none"
+          >
+            去退款
+          </navigator> -->
           <!-- 待收货状态: 展示确认收货 -->
           <view
             v-if="order.orderState === OrderState.DaiShouHuo"
             class="button primary"
-            @tap="onOrderConfirm(order.id)"
+            @tap="onOrderConfirm(order.orderId)"
           >
             确认收货
           </view>
@@ -303,6 +349,28 @@ const onRefresherrefresh = async () => {
       background-color: #f7f7f8;
     }
 
+    .single-price {
+      margin-top: 30rpx;
+      width: fit-content;
+      font-size: 35rpx;
+      color: #ff9240;
+    }
+
+    .sku-title{
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .num {
+      font-size: 30rpx;
+      width:45rpx;
+      height: 45rpx;
+      border-radius: 5rpx;
+      border: 1rpx solid gainsboro;
+      text-align: center;
+      line-height: 45rpx;
+    }
+
     .more {
       flex: 1;
       display: flex;
@@ -310,6 +378,19 @@ const onRefresherrefresh = async () => {
       justify-content: center;
       font-size: 22rpx;
       color: #333;
+    }
+
+    .button {
+      width: 180rpx;
+      height: 60rpx;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-left: 20rpx;
+      border-radius: 60rpx;
+      border: 1rpx solid #ccc;
+      font-size: 26rpx;
+      color: #444;
     }
   }
 
@@ -359,14 +440,14 @@ const onRefresherrefresh = async () => {
     }
 
     .secondary {
-      color: #27ba9b;
-      border-color: #27ba9b;
+      color: black;
+      border-color: rgb(255,234,189);
     }
 
     .primary {
-      color: #fff;
-      background-color: #27ba9b;
-      border-color: #27ba9b;
+      color: black;
+      background-color: rgb(255,234,189);
+      border-color: rgb(255,234,189);
     }
   }
 

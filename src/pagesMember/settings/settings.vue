@@ -7,7 +7,7 @@ const onLogout = () => {
   // 模态弹窗
   uni.showModal({
     content: '是否退出登录？',
-    confirmColor: '#27BA9B',
+    confirmColor: 'rgb(255,234,189)',
     success: (res) => {
       if (res.confirm) {
         // 清理用户信息
@@ -38,7 +38,7 @@ const onLogout = () => {
     <!-- #endif -->
     <!-- 列表3 -->
     <view class="list">
-      <button hover-class="none" class="item arrow">关于小兔鲜儿</button>
+      <button hover-class="none" class="item arrow">关于践行鲜果</button>
     </view>
     <!-- 操作按钮 -->
     <view class="action" v-if="memberStore.profile">
@@ -49,7 +49,7 @@ const onLogout = () => {
 
 <style lang="scss">
 page {
-  background-color: #f4f4f4;
+  background-image: linear-gradient(rgb(255,255,246),rgb(255, 255, 236));
 }
 
 .viewport {

@@ -1,14 +1,33 @@
 <script setup lang="ts">
+// import {
+  // getMemberOrderPreAPI,
+  // getMemberOrderPreNowAPI,
+  // getMemberOrderRepurchaseByIdAPI,
+  // postMemberOrderAPI,
+// } from '@/services/order'
 import {
-  getMemberOrderPreAPI,
-  getMemberOrderPreNowAPI,
-  getMemberOrderRepurchaseByIdAPI,
-  postMemberOrderAPI,
+  getOrderPre,
+  getDefaultAddress,
+  postOrder,
+  getMemberOrderPreNow,
+  // getMemberOrderRepurchaseById,
+  getMemberOrderById 
 } from '@/services/order'
+
+import {
+  getCoupon
+} from '@/services/coupon'
+
 import { useAddressStore } from '@/stores/modules/address'
+import { useCouponStore } from '@/stores/modules/coupon'
+import type { AddressItem
+ } from '@/types/address'
 import type { OrderPreResult } from '@/types/order'
-import { onLoad } from '@dcloudio/uni-app'
+import { onLoad, onShareAppMessage, onShareTimeline } from '@dcloudio/uni-app'
+
 import { computed, ref } from 'vue'
+import type { CouponItem } from '@/types/coupon'
+import { title } from 'process'
 
 // 获取屏幕边界到安全区域距离
 const { safeAreaInsets } = uni.getSystemInfoSync()
@@ -16,10 +35,28 @@ const { safeAreaInsets } = uni.getSystemInfoSync()
 const buyerMessage = ref('')
 // 配送时间
 const deliveryList = ref([
-  { type: 1, text: '时间不限 (周一至周日)' },
-  { type: 2, text: '工作日送 (周一至周五)' },
-  { type: 3, text: '周末配送 (周六至周日)' },
+  { type: 1, text: '17:30~18:30 (周一至周日)' },
+  // { type: 2, text: '工作日送 (周一至周五)' },
+  // { type: 3, text: '周末配送 (周六至周日)' },
 ])
+
+const openPopup = () => {
+  // 修改弹出层名称
+  popup.value?.open()
+}
+
+const init = () => {
+  console.log("init")
+}
+
+// uni-ui 弹出层组件 ref
+const popup = ref<{
+  open: (type?: UniHelper.UniPopupType) => void
+  close: () => void
+}>()
+
+
+
 // 当前配送时间下标
 const activeIndex = ref(0)
 // 当前配送时间
@@ -34,72 +71,175 @@ const query = defineProps<{
   skuId?: string
   count?: string
   orderId?: string
+  type?: string,
+  price?: number,
+  formData: Object
 }>()
 
+
+var defaultAddress = ref<AddressItem>()
+
+const getDefaultAddressData = async () => {
+  const res = await getDefaultAddress()
+  defaultAddress.value = res.data
+  console.log(defaultAddress.value)
+}
+
+const gotoCoupon = () => {
+  uni.navigateTo( {
+      url: `../../pagesMember/coupon/coupon?totalPrice=${totalPrice.value}`
+    }
+  )
+}
+
 // 获取订单信息
-const orderPre = ref<OrderPreResult>()
+const orderPre = ref<OrderPreResult[]>()
 const getMemberOrderPreData = async () => {
-  if (query.count && query.skuId) {
-    const res = await getMemberOrderPreNowAPI({
-      count: query.count,
-      skuId: query.skuId,
+  if (query.type === '2') {
+    postFee.value = 0
+    const res = await getMemberOrderPreNow({
+      skuId: query.skuId
     })
-    orderPre.value = res.result
-  } else if (query.orderId) {
+    orderPre.value = res.data
+    sumPrice()   
+  } else if (query.type === '3') {
     // 再次购买
-    const res = await getMemberOrderRepurchaseByIdAPI(query.orderId)
-    orderPre.value = res.result
+    const res = await getMemberOrderById(Number(query.orderId))
+    orderPre.value = res.data.skus
+    postFee.value = res.data.postFee
+    getDefaultAddressData()
+    sumPrice()
   } else {
-    const res = await getMemberOrderPreAPI()
-    orderPre.value = res.result
+    const res = await getOrderPre()
+    orderPre.value = res.data
+    postFee.value = 0
+    sumPrice()
   }
 }
 
-onLoad(() => {
+onLoad((options) => {
+  console.log(options)
+  console.log("query", query.formData)
   getMemberOrderPreData()
+  getDefaultAddressData()
+  selectedCoupon.value = undefined
+  uni.showShareMenu({
+    withShareTicket: true,
+    menus: ['shareAppMessage', 'shareTimeline'],
+    success: (res) => {
+      console.log('showShareMenu',res);
+    }
+  })
 })
 
 const addressStore = useAddressStore()
 // 收货地址
 const selecteAddress = computed(() => {
-  return addressStore.selectedAddress || orderPre.value?.userAddresses.find((v) => v.isDefault)
+  return addressStore.selectedAddress || defaultAddress
 })
+
+const couponStore = useCouponStore()
+const selectedCoupon = computed(() => {
+  return couponStore.selectedCoupon
+})
+
+onShareAppMessage ((res: any) => {
+  if (res.from === 'button') {
+    console.log(res.target)
+  }
+  return {
+    title: '标题',
+    // path: '/pages/pagesOrder/create/create' 
+  }
+})
+
+onShareTimeline (()  => {
+  return {
+    title: '标题'
+  }
+})
+const sumPrice = () => {
+  let result = orderPre.value.reduce((sum, item) => {
+    if ('num' in item) {
+      return sum + item.price * item.num
+    } else {
+      return sum + item.price * Number(query.count)
+    }
+  }, 0)
+  totalPrice.value = result
+}
+
+const totalPrice = ref<number> ()
+const postFee = ref<number> ()
+const notes = ref<string>()
+
+const onSubscribe = async () => {
+      wx.requestSubscribeMessage({
+      tmplIds: ['JmwYKZ9RgZr4y1nAp_eDjgUrEt_mMIsSPOaEZMLqKsk','kxAwLKc6Nn3_uC4RL7DLUof6WqqiqZwfiXvAkE1B3F8'],
+      success: (res) => {
+        if (res['JmwYKZ9RgZr4y1nAp_eDjgUrEt_mMIsSPOaEZMLqKsk'] == 'accept') {
+          console.log("订阅成功")
+        }
+      }
+    })
+  }
 
 // 提交订单
 const onOrderSubmit = async () => {
   // 没有收货地址提醒
-  if (!selecteAddress.value?.id) {
+  console.log("default", defaultAddress.value?.id)
+  console.log("selected", selecteAddress.value.id)
+  console.log(!selecteAddress.id && !defaultAddress)
+  if (!selecteAddress.value.id && !defaultAddress.value?.id) {
     return uni.showToast({ icon: 'none', title: '请选择收货地址' })
   }
   // 发送请求
-  const res = await postMemberOrderAPI({
-    addressId: selecteAddress.value?.id,
-    buyerMessage: buyerMessage.value,
-    deliveryTimeType: activeDelivery.value.type,
-    goods: orderPre.value!.goods.map((v) => ({ count: v.count, skuId: v.skuId })),
-    payChannel: 2,
-    payType: 1,
-  })
+  await onSubscribe()
+    const goodsList = orderPre?.value.map((v:any) => ({ id: v.skuId, num: v.num || Number(query?.count) }))
+    const response = await postOrder({
+      addressId: selecteAddress.value?.id || defaultAddress.value?.id,
+      goods: goodsList,
+      payMoney: (postFee.value + totalPrice.value - (selectedCoupon.value?.price || 0)).toFixed(2),
+      notes: notes.value,
+      discount: selectedCoupon.value?.price || 0,
+      couponId: selectedCoupon.value?.id
+    })
+    uni.showToast({
+      title: '支付成功'
+    })
   // 关闭当前页面，跳转到订单详情，传递订单id
-  uni.redirectTo({ url: `/pagesOrder/detail/detail?id=${res.result.id}` })
+    uni.redirectTo({ url: `/pagesOrder/detail/detail?id=${response.data.id}` }) 
 }
 </script>
 
 <template>
   <scroll-view enable-back-to-top scroll-y class="viewport">
+  
     <!-- 收货地址 -->
     <navigator
-      v-if="selecteAddress"
+      v-if="selecteAddress.id"
       class="shipment"
       hover-class="none"
       url="/pagesMember/address/address?from=order"
     >
-      <view class="user"> {{ selecteAddress.receiver }} {{ selecteAddress.contact }} </view>
-      <view class="address"> {{ selecteAddress.fullLocation }} {{ selecteAddress.address }} </view>
+      <view class="user"> {{ selecteAddress.receiverName }} {{ selecteAddress.receiverPhone }} </view>
+      <view class="address"> {{ selecteAddress.campus }} {{ selecteAddress.roomAddress }} </view>
       <text class="icon icon-right"></text>
     </navigator>
+
     <navigator
-      v-else
+      v-if="!selecteAddress.id && defaultAddress"
+      class="shipment"
+      hover-class="none"
+      url="/pagesMember/address/address?from=order"
+    >
+      <view class="user"> {{ defaultAddress.receiverName }} {{ defaultAddress.receiverPhone }} </view>
+      <view class="address"> {{ defaultAddress.campus }} {{ defaultAddress.roomAddress }} </view>
+      <text class="icon icon-right"></text>
+    </navigator>
+
+    <navigator
+      v-if="!selecteAddress.id && !defaultAddress"
       class="shipment"
       hover-class="none"
       url="/pagesMember/address/address?from=order"
@@ -107,25 +247,25 @@ const onOrderSubmit = async () => {
       <view class="address"> 请选择收货地址 </view>
       <text class="icon icon-right"></text>
     </navigator>
-
+    
     <!-- 商品信息 -->
     <view class="goods">
       <navigator
-        v-for="item in orderPre?.goods"
-        :key="item.skuId"
-        :url="`/pages/goods/goods?id=${item.id}`"
+        v-for="(item,index) in orderPre"
+        :key="index"
+        :url="`/pages/goods/goods?id=${item.goodsId}`"
         class="item"
         hover-class="none"
       >
-        <image class="picture" :src="item.picture" />
+        <image class="picture" :src="item.thumbNail" />
         <view class="meta">
-          <view class="name ellipsis"> {{ item.name }} </view>
-          <view class="attrs">{{ item.attrsText }}</view>
+          <view class="name ellipsis"> {{ item.goodsName }} </view>
+          <view class="attrs">{{ item.scale }}</view>
           <view class="prices">
-            <view class="pay-price symbol">{{ item.payPrice }}</view>
-            <view class="price symbol">{{ item.price }}</view>
+            <view class="pay-price symbol">{{ item.price }}</view>
+            <!-- <view class="price symbol">{{ item.price }}</view> -->
           </view>
-          <view class="count">x{{ item.count }}</view>
+          <view class="count">x{{ item.num || query.count }}</view>
         </view>
       </navigator>
     </view>
@@ -144,7 +284,7 @@ const onOrderSubmit = async () => {
           class="input"
           :cursor-spacing="30"
           placeholder="选题，建议留言前先与商家沟通确认"
-          v-model="buyerMessage"
+          v-model="notes"
         />
       </view>
     </view>
@@ -153,11 +293,22 @@ const onOrderSubmit = async () => {
     <view class="settlement">
       <view class="item">
         <text class="text">商品总价: </text>
-        <text class="number symbol">{{ orderPre?.summary.totalPrice.toFixed(2) }}</text>
+        <text class="number symbol">{{ totalPrice }}</text>
       </view>
       <view class="item">
         <text class="text">运费: </text>
-        <text class="number symbol">{{ orderPre?.summary.postFee.toFixed(2) }}</text>
+        <text class="number symbol">{{ postFee }}</text>
+      </view>
+      <view class="item" @click="gotoCoupon">
+        <text class="text">
+          选择优惠券:{{ 
+          selectedCoupon? `满${selectedCoupon.effectivePrice}减${selectedCoupon.price}`:
+          ''
+          }}
+        </text>
+        <text class="number"
+        :class="[selectedCoupon? 'decrease': 'icon icon-right']">
+        {{ selectedCoupon?.price }}</text>
       </view>
     </view>
   </scroll-view>
@@ -165,9 +316,10 @@ const onOrderSubmit = async () => {
   <!-- 吸底工具栏 -->
   <view class="toolbar" :style="{ paddingBottom: safeAreaInsets?.bottom + 'px' }">
     <view class="total-pay symbol">
-      <text class="number">{{ orderPre?.summary.totalPayPrice.toFixed(2) }}</text>
+      <text class="number">{{ (postFee + totalPrice - (selectedCoupon?.price || 0)).toFixed(2) }}</text>
     </view>
-    <view class="button" :class="{ disabled: !selecteAddress?.id }" @tap="onOrderSubmit">
+    <!-- <button  id="share" ref="share" data-name="shareBtn" class="button-share" open-type="share">点击分享给微信好友</button> -->
+    <view class="button" :class="{ disabled: !selecteAddress.id && !defaultAddress }" @tap="onOrderSubmit">
       提交订单
     </view>
   </view>
@@ -179,7 +331,27 @@ page {
   flex-direction: column;
   height: 100%;
   overflow: hidden;
-  background-color: #f4f4f4;
+  background-image: linear-gradient(rgb(255,255,246),rgb(255, 255, 236));
+}
+
+.decrease {
+  color: red;
+  font-weight: 700;
+}
+
+.decrease::before {
+  content: '-';
+  font-size: 80%;
+  margin-right: 5rpx;
+  font-weight: 700;
+}
+
+.button-share{
+  width:100rpx;
+  height:100rpx;
+  border-radius:50%;
+  background-color:rgb(255,234,189);
+  color: black;
 }
 
 .symbol::before {
@@ -187,6 +359,8 @@ page {
   font-size: 80%;
   margin-right: 5rpx;
 }
+
+
 
 .shipment {
   margin: 20rpx;
@@ -380,9 +554,10 @@ page {
     text-align: center;
     line-height: 72rpx;
     font-size: 26rpx;
-    color: #fff;
+    color: black;
     border-radius: 72rpx;
-    background-color: #27ba9b;
+    background-color: rgb(255,234,189);
+    
   }
 
   .disabled {

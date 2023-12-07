@@ -1,5 +1,5 @@
 {
-    "name" : "小兔鲜儿",
+    "name" : "践行鲜果",
     "appid" : "__UNI__265C604",
     "description" : "",
     "versionName" : "1.0.0",
@@ -97,10 +97,12 @@
     },
     /* 小程序特有相关 */
     "mp-weixin" : {
-        "appid" : "wx26729f20b9efae3a",
+        "appid" : "wx83fe3e9cf98dd8f2",
+        // "__usePrivacyCheck__": true,
         "setting" : {
             "urlCheck" : true
         },
+        "embeddedAppIdList": ["wxd947200f82267e58"],
         "usingComponents" : true
     },
     "mp-alipay" : {

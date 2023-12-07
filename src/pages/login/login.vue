@@ -1,65 +1,8 @@
-<script setup lang="ts">
-import { postLoginAPI, postLoginWxMinAPI, postLoginWxMinSimpleAPI } from '@/services/login'
-import { useMemberStore } from '@/stores'
-import type { LoginResult } from '@/types/member'
-import { onLoad } from '@dcloudio/uni-app'
-import { ref } from 'vue'
-
-// #ifdef MP-WEIXIN
-// 获取 code 登录凭证
-let code = ''
-onLoad(async () => {
-  const res = await wx.login()
-  code = res.code
-})
-
-// 获取用户手机号码
-const onGetphonenumber: UniHelper.ButtonOnGetphonenumber = async (ev) => {
-  const { encryptedData, iv } = ev.detail
-  const res = await postLoginWxMinAPI({ code, encryptedData, iv })
-  loginSuccess(res.result)
-}
-// #endif
-
-// 模拟手机号码快捷登录（开发练习）
-const onGetphonenumberSimple = async () => {
-  const res = await postLoginWxMinSimpleAPI('13123456789')
-  loginSuccess(res.result)
-}
-
-const loginSuccess = (profile: LoginResult) => {
-  // 保存会员信息
-  const memberStore = useMemberStore()
-  memberStore.setProfile(profile)
-  // 成功提示
-  uni.showToast({ icon: 'success', title: '登录成功' })
-  setTimeout(() => {
-    // 页面跳转
-    // uni.switchTab({ url: '/pages/my/my' })
-    uni.navigateBack()
-  }, 500)
-}
-
-// #ifdef H5
-// 传统表单登录，测试账号：13123456789 密码：123456，测试账号仅开发学习使用。
-const form = ref({
-  account: '13123456789',
-  password: '',
-})
-
-// 表单提交
-const onSubmit = async () => {
-  const res = await postLoginAPI(form.value)
-  loginSuccess(res.result)
-}
-// #endif
-</script>
-
 <template>
   <view class="viewport">
     <view class="logo">
-      <image
-        src="https://pcapi-xiaotuxian-front-devtest.itheima.net/miniapp/images/logo_icon.png"
+      <image mode="aspectFit"
+        src="https://image.familystudy.cn/image/jxfruit/%E6%AD%A3%E5%BC%8Flogo.webp"
       ></image>
     </view>
     <view class="login">
@@ -72,30 +15,165 @@ const onSubmit = async () => {
 
       <!-- 小程序端授权登录 -->
       <!-- #ifdef MP-WEIXIN -->
-      <button class="button phone" open-type="getPhoneNumber" @getphonenumber="onGetphonenumber">
-        <text class="icon icon-phone"></text>
-        手机号快捷登录
+      <button class="button phone" 
+      @tap="onGetphonenumber">
+        <text class="icon"></text>
+        一键登录/注册
       </button>
       <!-- #endif -->
-      <view class="extra">
+
+      <!-- <view class="extra">
         <view class="caption">
           <text>其他登录方式</text>
         </view>
-        <view class="options">
+        <view class="options"> -->
           <!-- 通用模拟登录 -->
-          <button @tap="onGetphonenumberSimple">
+          <!-- <button @tap="onGetphonenumberSimple">
             <text class="icon icon-phone">模拟快捷登录</text>
           </button>
         </view>
-      </view>
-      <view class="tips">登录/注册即视为你同意《服务条款》和《小兔鲜儿隐私协议》</view>
+      </view> -->
+      <view class="tips"> 
+        <checkbox-group class="check">
+          <checkbox @tap="check"></checkbox>
+        </checkbox-group>
+        您已知晓并同意 <text class="content-link" @tap="jumpPrivacy">《小程序隐私保护指引》</text></view>
     </view>
+    <!-- #ifdef MP-WEIXIN -->
+    <ws-wx-privacy id="privacy-popup"></ws-wx-privacy>
+    <!-- #endif -->
   </view>
 </template>
+<script lang="ts">
+  import type { LoginResult, LoginParams, ProfileDetail } from '@/types/user'
+  import { loginByPwd, loginByWechat, registerByWechat } from '@/services/login'
+  import { useMemberStore } from '@/stores'
+  export default{
+    data(){
+      return{
+        approve: false,
+        form: {
+          account: '13123456789',
+          password: ''
+        }
+      }
+    },
+    onLoad() {
+      // //#ifdef MP-WEIXIN        
+      // wx.requirePrivacyAuthorize({            
+      //   success: () => {                
+      //     console.log('点击同意');            
+      //   },            
+      //     fail: () => {                
+      //       console.log('点击拒绝');                            
+      //   },             
+      //     complete: () => {                
+      //       console.log('用户已点击');            
+      //   }       
+      // })
+    },
+    methods:{
+      check () {
+        console.log("change")
+        this.approve= !this.approve
+      },
+      async onSubmit(){
+        // const res = await postLoginAPI(form.value)
+        // loginSuccess(res.result)
+      },
+      onSuccess(result: LoginResult) {
+       // 保存会员信息
+        var { userInfo } = result
+        var { nickName, gender, grade, username, campus, avatarUrl, id } = userInfo
+        const profile = { nickName, gender, grade, username, campus, avatarUrl, token: result.token, userId: id }
+        console.log(profile)
+        const memberStore = useMemberStore()
+        memberStore.setProfile(profile)
+        // 成功提示
+        uni.showToast({ icon: 'success', title: '登录成功' })
+
+        
+
+
+          setTimeout(() => {
+            // 页面跳转
+            uni.navigateBack()
+          }, 500)
+      },
+
+      jumpPrivacy() {
+        wx.openPrivacyContract({
+          success: () => {}, // 打开成功
+          fail: () => {}, // 打开失败
+        })
+      },
+
+      // //#endif
+      // async onGetphonenumberSimple() {
+      //   // const res = await postLoginWxMinSimpleAPI('13123456789')
+      //   const query = {
+      //     username:"hxy123",
+      //     password:"123456"
+      //   }
+      //   const res = await loginByPwd(query)
+      //   this.onSuccess(res.data)
+      // },
+
+      onGetphonenumber() {
+        console.log(this.approve)
+        if (!this.approve) {
+          return uni.showToast({
+            title: '请同意隐私保护指引方可登录',
+            icon: 'error'
+          })
+        }
+        let this_ = this
+        uni.login({
+          success: async function (res) {
+            const code = res.code
+            const response = await loginByWechat({ code })
+            if (response.code === 200) {
+              this_.onSuccess(response.data)
+            } 
+            else {
+              uni.login({
+                success: async function (res) {
+                  const registerRes = await registerByWechat({ code: res.code })
+                  if (registerRes.code === 200) {
+                    console.log(registerRes.data.openId)
+                    localStorage.setItem("openId", openId)
+                    this_.onSuccess(registerRes.data)
+                  } 
+                }
+              })            
+            }        
+          }
+        })
+      }
+    }
+  }
+</script>
 
 <style lang="scss">
 page {
   height: 100%;
+}
+
+checkbox .wx-checkbox-input { 
+  border-radius: 50%;/*圆角*/ width: 35rpx;/*背景的宽*/ height: 35rpx;/*背景的高*/ 
+}
+
+checkbox .wx-checkbox-input.wx-checkbox-input-checked::before{
+    color: black; /* 对勾颜色 白色 */
+    background: transparent;
+    transform:translate(-70%, -60%) scale(0.7);
+    // -webkit-transform:translate(-50%, -50%) scale(1);
+    width: 30rpx;
+    height: 30rpx;
+}
+
+.content-link {
+  color: #0D91EE;
 }
 
 .viewport {
@@ -109,8 +187,8 @@ page {
   flex: 1;
   text-align: center;
   image {
-    width: 220rpx;
-    height: 220rpx;
+    width: 350rpx;
+    height: 350rpx;
     margin-top: 15vh;
   }
 }
@@ -147,11 +225,12 @@ page {
   }
 
   .phone {
-    background-color: #28bb9c;
+    background-color: rgb(255,234,189);
+    color: black;
   }
 
   .wechat {
-    background-color: #06c05f;
+    background-color: rgb(255,234,189);
   }
 
   .extra {
@@ -207,19 +286,23 @@ page {
       }
     }
     .icon-weixin::before {
-      border-color: #06c05f;
-      color: #06c05f;
+      border-color: rgb(255,234,189);
+      color: rgb(255,234,189);
     }
   }
 }
 
 .tips {
+  display: flex;
   position: absolute;
   bottom: 80rpx;
-  left: 20rpx;
+  left: 50%;
+  transform: translate(-50%);
   right: 20rpx;
   font-size: 22rpx;
   color: #999;
   text-align: center;
+  width: 500rpx;
+  align-items: center;
 }
 </style>

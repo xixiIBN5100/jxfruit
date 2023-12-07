@@ -519,10 +519,10 @@ export default {
       that.outFoStock = false
       that.shopItemInfo = {}
       let specListName = that.specListName
-      that.goodsInfo[specListName].map((item) => {
-        that.selectArr.push('')
-        that.subIndex.push(-1)
-      })
+      // that.goodsInfo[specListName].map((item) => {
+      //   that.selectArr.push('')
+      //   that.subIndex.push(-1)
+      // })
       that.checkItem() // 计算sku里面规格形成路径
       that.checkInpath(-1) // 传-1是为了不跳过循环
       if (!notAutoClick) that.autoClickSku() // 自动选择sku策略

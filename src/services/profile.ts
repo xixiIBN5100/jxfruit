@@ -1,24 +1,16 @@
-import type { ProfileDetail, ProfileParams } from '@/types/member'
-import { http } from '@/utils/http'
-
-/**
- * 获取个人信息
- */
-export const getMemberProfileAPI = () => {
-  return http<ProfileDetail>({
-    method: 'GET',
-    url: '/member/profile',
-  })
+import { http } from "@/utils/http";
+import type { ProfileDetail } from "@/types/user";
+export const getProfile = () =>{
+    return http<ProfileDetail>({
+        url: '/profile',
+        method: 'GET'
+    })
 }
 
-/**
- * 修改个人信息
- * @param data 请求体参数
- */
-export const putMemberProfileAPI = (data: ProfileParams) => {
-  return http<ProfileDetail>({
-    method: 'PUT',
-    url: '/member/profile',
-    data,
-  })
+export const updateProfile = (data: ProfileDetail) =>{
+    return http({
+        url: '/profile/update',
+        method: 'POST',
+        data
+    })
 }

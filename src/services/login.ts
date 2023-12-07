@@ -1,49 +1,36 @@
-import type { LoginResult } from '@/types/member'
-import { http } from '@/utils/http'
+import type { LoginResult, LoginParams } from "@/types/user"
+import { http } from "@/utils/http"
 
-type LoginWxMinParams = {
-  code: string
-  encryptedData?: string
-  iv?: string
-}
 /**
- * 小程序登录
- * @param data 请求参数
+ * 传统登录 用户名 密码
+ * @param data
  */
-export const postLoginWxMinAPI = (data: LoginWxMinParams) => {
-  return http<LoginResult>({
-    method: 'POST',
-    url: '/login/wxMin',
-    data,
-  })
+export const loginByPwd = (data: LoginParams) => {
+    return http<LoginResult>({
+        method: 'POST',
+        url: '/login',
+        data
+    })
 }
 
 /**
- * 小程序登录_内测版
- * @param phoneNumber 模拟手机号码
+ * 微信一键登录
  */
-export const postLoginWxMinSimpleAPI = (phoneNumber: string) => {
-  return http<LoginResult>({
-    method: 'POST',
-    url: '/login/wxMin/simple',
-    data: {
-      phoneNumber,
-    },
-  })
+export const loginByWechat = (data: {code: string}) => {
+    return http<LoginResult> ({
+        method: 'POST',
+        url: '/login/wechat',
+        data
+    })
 }
 
-type LoginParams = {
-  account: string
-  password: string
-}
 /**
- * 传统登录-用户名+密码
- * @param data 请求参数
+ * 微信一键注册
  */
-export const postLoginAPI = (data: LoginParams) => {
-  return http<LoginResult>({
-    method: 'POST',
-    url: '/login',
-    data,
-  })
+export const registerByWechat = (data: {code: string}) => {
+    return http<LoginResult> ({
+        method: 'POST',
+        url: '/register/wechat',
+        data
+    })
 }
