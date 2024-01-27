@@ -48,7 +48,7 @@ const scrollToElement = (id: string) => {
         <text class="member">白银会员</text>
 
         <view style="width: 300rpx; margin-left: 80rpx; margin-top: 20rpx">
-          <text style="font-size: 20rpx">30目前距离升级还需要70成长值</text>
+          <text style="font-size: 20rpx">30目前距离升级还需要70成长值 </text>
           <progress :percent="30" :active="true" :border-radius="3" :stroke-width="3"></progress>
         </view>
         <view class="color-box"></view>
