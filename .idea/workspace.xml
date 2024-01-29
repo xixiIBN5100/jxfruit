@@ -5,15 +5,11 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="833da7bf-efbd-4934-a02f-b4fb823f9512" name="更改" comment="">
-      <change afterPath="$PROJECT_DIR$/src/pagesAdmin/goodsDetails/goodsDetails.vue" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/pagesAdmin/goodsManage/goodsManage.vue" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/pagesAdmin/orderDetails/orderDetails.vue" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/pagesAdmin/orderManage/components/orderList.vue" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/pagesAdmin/orderManage/orderManage.vue" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/pages.json" beforeDir="false" afterPath="$PROJECT_DIR$/src/pages.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/pages/login/login.vue" beforeDir="false" afterPath="$PROJECT_DIR$/src/pages/login/login.vue" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/pages/my/my.vue" beforeDir="false" afterPath="$PROJECT_DIR$/src/pages/my/my.vue" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/pagesOrder/detail/detail.vue" beforeDir="false" afterPath="$PROJECT_DIR$/src/pagesOrder/detail/detail.vue" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/services/adminGoods.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pnpm-lock.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/pnpm-lock.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/pagesAdmin/goodsDetails/goodsDetails.vue" beforeDir="false" afterPath="$PROJECT_DIR$/src/pagesAdmin/goodsDetails/goodsDetails.vue" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/pagesAdmin/goodsManage/goodsManage.vue" beforeDir="false" afterPath="$PROJECT_DIR$/src/pagesAdmin/goodsManage/goodsManage.vue" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -24,11 +20,15 @@
     <option name="RECENT_TEMPLATES">
       <list>
         <option value="Vue Single File Component" />
+        <option value="TypeScript File" />
       </list>
     </option>
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="GitToolBoxStore">
+    <option name="projectConfigVersion" value="5" />
   </component>
   <component name="MarkdownSettingsMigration">
     <option name="stateVersion" value="1" />
@@ -80,6 +80,7 @@
       <workItem from="1702553831712" duration="3180000" />
       <workItem from="1702604565002" duration="5929000" />
       <workItem from="1702627047272" duration="46000" />
+      <workItem from="1706511614085" duration="6551000" />
     </task>
     <servers />
   </component>

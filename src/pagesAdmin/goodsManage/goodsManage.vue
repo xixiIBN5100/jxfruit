@@ -37,7 +37,7 @@ const navList = [
   },
   {
     id: 4,
-    name: '活动商品'
+    name: '活动商品',
   }
 ]
 
@@ -87,6 +87,7 @@ const activeIndex = ref(0)
 const getCategoryTopData = async () => {
   const res = await getCategoryTop()
   categoryList.value = res.data
+  console.log(res.data);
 }
 
 onReachBottom(() => {

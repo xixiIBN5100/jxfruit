@@ -12,8 +12,9 @@ import type { GoodsItem, GoodsResult, SkuItem, GoodsImageItem } from '@/types/go
 import type { AddressItem } from '@/types/address'
 import { onLoad } from '@dcloudio/uni-app'
 import { computed, ref, onMounted} from 'vue'
-
+import{updateGood, deleteById, setOnShelf} from "@/services/adminGoods";
 import { profile } from 'console'
+// import uni from '@dcloudio/vite-plugin-uni'
 // 获取屏幕边界到安全区域距离
 const { safeAreaInsets } = uni.getSystemInfoSync()
 import { useMemberStore } from '@/stores'
@@ -29,13 +30,14 @@ const selectAddress = (address) => {
 }
 
 var selectedAddress = ref<AddressItem>()
-
+const onShelf = ref(0)
 // 获取商品详情信息
 const goods = ref<GoodsResult>()
 const getGoodsByIdData = async () => {
   console.log(query.id)
   const res = await getGoodsById(query.id)
   goods.value = res.data
+  onShelf.value = goods.value.goodsInfo.onShelf
   // SKU组件所需格式
   // localdata.value = {
   //   _id: res.data.id,
@@ -60,11 +62,11 @@ onLoad(() => {
 
 const address = ref<AddressItem[]>()
 
-const getUserAddress = async () => {
-  const res = await getAddress()
-  console.log(res.data)
-  address.value = res.data
-}
+// const getUserAddress = async () => {
+//   const res = await getAddress()
+//   console.log(res.data)
+//   address.value = res.data
+// }
 
 const sku = ref<SkuItem[]>()
 const getGoodsScaleList = async () => {
@@ -123,13 +125,69 @@ const openSkuPopup = (val: SkuMode) => {
 }
 
 const childComponentRef = ref(null)
-//我也不知道 SKU组件实例 这玩意是啥东西
 // SKU组件实例
 const skuPopupRef = ref<SkuPopupInstance>()
 
 const toComment = (id: string) => {
   uni.navigateTo({url: `/pagesOrder/comment/comment?goodsId=${id}`})
 }
+
+const saveChanges = () => {
+  console.log(goods.value)
+  const data = goods.value
+  updateGood(data.goodsInfo).then((res) => {
+    if(res.msg==="success"){
+      uni.showToast({
+        title: '保存成功!',
+        icon: 'success',
+        duration: 2000,
+      })
+    }
+  })
+}
+
+const changeShelf = async () => {
+  const state = onShelf.value == 1 ? 0 : 1
+  const res = await setOnShelf({
+    id: goods.value.goodsInfo.id,
+    state: state,
+  }).then((r) => {
+    console.log(r);
+    if(r.msg==="success"){
+      uni.showToast({
+        title: '操作成功!',
+        icon: 'success',
+        duration: 2000,
+      })
+      onShelf.value = 1 - onShelf.value
+    }
+  })
+}
+
+const deleteGood = async () => {
+  uni.showModal({
+
+    title: '提示',
+    // 提示文字
+    content: '确认删除该条信息吗？',
+    // 取消按钮的文字自定义
+    cancelText: "取消",
+    // 确认按钮的文字自定义
+    confirmText: "删除",
+    //删除字体的颜色
+    confirmColor:'red',
+    //取消字体的颜色
+    cancelColor:'#000000',
+    success: function(res) {
+      if (res.confirm) {
+
+      }
+        // const res = deleteById(goods.value.goodsInfo.id);
+        //
+      }
+    })
+  }
+
 </script>
 
 <template>
@@ -189,11 +247,14 @@ const toComment = (id: string) => {
 
   <view v-if="goods" class="toolbar" :style="{ paddingBottom: safeAreaInsets?.bottom + 'px' }">
     <view class="buttons">
-      <view class="payment" :class="[ goods?.goodsInfo.onShelf === 0 ? 'under-shelf': '' ]">
+      <view class="payment" @tap="deleteGood()">
         删除
       </view>
-      <view class="payment" :class="[ goods?.goodsInfo.onShelf === 0 ? 'under-shelf': '' ]">
+      <view class="payment" @tap="saveChanges()">
         保存
+      </view>
+      <view class="payment" @tap="changeShelf()">
+        {{ onShelf ? '下架' : '上架' }}
       </view>
     </view>
   </view>
