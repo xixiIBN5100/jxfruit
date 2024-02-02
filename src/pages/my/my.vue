@@ -18,7 +18,7 @@ const priviledges = ref()
 
 onMounted(async () => {
   if (memberStore.profile) {
-    await getMemberData() 
+    await getMemberData()
   } else {
     member.value = {
       couponNum: 0,
@@ -47,7 +47,7 @@ onMounted(async () => {
       type: 1
     }
   ]
-  
+
 })
 // 获取屏幕边界到安全区域距离
 const { safeAreaInsets } = uni.getSystemInfoSync()
@@ -63,7 +63,7 @@ const memberTypes = [
     imgUrl: 'https://image.familystudy.cn/image/jxfruit/会员免运费1.webp'
   },
   {
-    type: '2', 
+    type: '2',
     text: '每月一分领',
     imgUrl: 'https://image.familystudy.cn/image/jxfruit/每月一分领.webp'
   },
@@ -123,7 +123,7 @@ const memberTypes = [
     <view class="orders member">
       <view class="title" style="padding-left: 20rpx;">
          会员中心
-        <navigator class="navigator" url="/pages/coming-soon/coming-soon" hover-class="none">
+        <navigator class="navigator" url="/pagesMember/member-center/member-center" hover-class="none">
           全部<text class="icon-right"></text>
         </navigator>
       </view>
@@ -138,7 +138,7 @@ const memberTypes = [
           style=" padding-bottom: 15rpx;"
         >
         <image :src="item.imgUrl" mode="aspectFit" style="margin-bottom: 10rpx;"></image>
-        <view style="">{{ item.text }}</view>  
+        <view style="">{{ item.text }}</view>
         </navigator>
         <!-- 客服 -->
         <!-- #ifdef MP-WEIXIN -->
@@ -151,8 +151,8 @@ const memberTypes = [
     <view class="orders">
       <view class="title">
         我的订单
-        <navigator class="navigator" 
-        :url="memberStore.profile? 
+        <navigator class="navigator"
+        :url="memberStore.profile?
           '/pagesOrder/list/list?type=0':'/pages/login/login'"
         hover-class="none">
           全部<text class="icon-right"></text>
@@ -164,7 +164,7 @@ const memberTypes = [
           v-for="item in orderTypes"
           :key="item.type"
           :class="item.icon"
-          :url="memberStore.profile? 
+          :url="memberStore.profile?
           `/pagesOrder/list/list?type=${item.type}`
           :'/pages/login/login'"
           class="navigator"
@@ -178,9 +178,9 @@ const memberTypes = [
     <view class="orders">
       <view class="title">
         我的权益
-        <navigator 
-          class="navigator" 
-          :url="memberStore.profile? 
+        <navigator
+          class="navigator"
+          :url="memberStore.profile?
           '/pagesMember/priviledge/priviledge?type=0':'/pages/login/login'"
           hover-class="none">
           全部<text class="icon-right"></text>
@@ -191,7 +191,7 @@ const memberTypes = [
         <navigator
           v-for="item in priviledges"
           :key="item.id"
-          :url="memberStore.profile? 
+          :url="memberStore.profile?
           `/pagesMember/priviledge/priviledge?type=${item.type}`:
           '/pages/login/login'"
           class="navigator"
@@ -202,7 +202,7 @@ const memberTypes = [
           </view>
           <view class="priviledge-name">
             {{ item.name }}
-          </view>          
+          </view>
         </navigator>
         <button class="contact icon-handset" open-type="contact">专属客服</button>
       </view>
@@ -335,13 +335,13 @@ page {
     line-height: 40rpx;
     font-size: 28rpx;
     color: #1e1e1e;
-   
+
 
     .navigator {
       font-size: 24rpx;
       color: #939393;
       float: right;
-    
+
     }
   }
 
@@ -387,7 +387,7 @@ page {
 
   .section {
     background: white;
-    border-radius: 15rpx;  
+    border-radius: 15rpx;
   }
 }
 </style>
