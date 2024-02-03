@@ -20,7 +20,7 @@ const memberTypes = [
   },
   {
     type: 'a2',
-    text: '每月一分领',
+    text: '优惠秒杀',
     imgUrl: 'https://image.familystudy.cn/image/jxfruit/每月一分领.webp',
   },
   {
@@ -117,10 +117,34 @@ const scrollToElement = (id: string) => {
         <text class="title1">会员免运费</text>
       </view>
       <view class="children1" id="a2">
-        <text class="title1">每月一分领</text>
+        <text class="title1">优惠秒杀</text>
+        <swiper class="couponList">
+      <swiper-item class="swiper_buy">
+        <view class="item"> </view>
+        <view class="item"> </view>
+        <view class="item"> </view>
+      </swiper-item>
+      <swiper-item class="swiper_buy">
+        <view class="item"> </view>
+        <view class="item"> </view>
+        <view class="item"> </view>
+      </swiper-item>
+        </swiper>
       </view>
       <view class="children1" id="a3">
         <text class="title1">专享免减券</text>
+        <swiper class="couponList">
+      <swiper-item class="swiper_coupon">
+        <view class="coupon"> </view>
+        <view class="coupon"> </view>
+        <view class="coupon"> </view>
+      </swiper-item>
+      <swiper-item class="swiper_coupon">
+        <view class="coupon"> </view>
+        <view class="coupon"> </view>
+        <view class="coupon"> </view>
+      </swiper-item>
+        </swiper>
       </view>
       <view class="children1" id="a4">
         <text class="title1">抽优惠券</text>
@@ -130,6 +154,37 @@ const scrollToElement = (id: string) => {
 </template>
 
 <style lang="scss">
+.swiper_buy {
+  display: flex;
+  justify-content: space-between;
+}
+.item {
+  width: 200rpx;
+  height: 150rpx;
+  background-color: rgb(255, 240, 228);
+  margin: 10rpx;
+  margin-top: -2rpx;
+  border-radius: 15rpx;
+}
+.swiper_coupon {
+  display: flex;
+  justify-content: space-between;
+}
+.itemList {
+  height: 200rpx;
+}
+.couponList {
+  padding: 10px; /* 调整内边距 */
+  height: 150rpx;
+}
+.coupon {
+  width: 200rpx;
+  height: 120rpx;
+  background-color: rgb(255, 240, 228);
+  margin: 10rpx;
+  margin-top: 20rpx;
+  border-radius: 15rpx;
+}
 .card {
   width: 650rpx;
   height: 280rpx;
@@ -186,15 +241,15 @@ const scrollToElement = (id: string) => {
 .container {
   display: flex;
   flex-direction: column;
-  background-color: #f0f0f0;
+  background-color: rgb(225, 225, 165);
   border-radius: 90rpx;
   margin: 20rpx auto 0;
   padding: 27rpx;
 
   .children1 {
     width: 100%;
-    height: 320rpx;
-    background-color: #ffffff;
+    height: 280rpx;
+    background-color: burlywood;
     border-radius: 60rpx;
     padding: 20rpx;
     margin: auto;
