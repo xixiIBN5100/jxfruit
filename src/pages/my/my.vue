@@ -126,6 +126,9 @@ const memberTypes = [
         <navigator class="navigator" url="/pagesMember/member-center/member-center" hover-class="none">
           全部<text class="icon-right"></text>
         </navigator>
+        <navigator class="navigator" url="/pagesAdmin/goodsManage/goodsManage" hover-class="none">
+          商品管理<text class="icon-right"></text>
+        </navigator>
       </view>
       <view class="section">
         <!-- 订单 -->
@@ -152,10 +155,17 @@ const memberTypes = [
       <view class="title">
         我的订单
         <navigator class="navigator"
-        :url="memberStore.profile?
-          '/pagesOrder/list/list?type=0':'/pages/login/login'"
-        hover-class="none">
+
+          :url="memberStore.profile ? '/pagesOrder/list/list?type=0' : '/pages/login/login'"
+          hover-class="none"
+        >
           全部<text class="icon-right"></text>
+        </navigator>
+        <navigator class="navigator"
+          :url="memberStore.profile ? '/pagesAdmin/orderManage/orderManage' : '/pages/login/login'"
+          hover-class="none"
+        >
+          订单管理<text class="icon-right"></text>
         </navigator>
       </view>
       <view class="section">
@@ -183,6 +193,7 @@ const memberTypes = [
           :url="memberStore.profile?
           '/pagesMember/priviledge/priviledge?type=0':'/pages/login/login'"
           hover-class="none">
+          优惠券管理<text class="icon-right"></text>
           全部<text class="icon-right"></text>
         </navigator>
       </view>
