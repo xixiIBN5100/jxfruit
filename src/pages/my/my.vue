@@ -123,7 +123,7 @@ const memberTypes = [
     <view class="orders member">
       <view class="title" style="padding-left: 20rpx;">
          会员中心
-        <navigator class="navigator" url="/pages/coming-soon/coming-soon" hover-class="none">
+        <navigator class="navigator" url="/pagesMember/member-center/member-center" hover-class="none">
           全部<text class="icon-right"></text>
         </navigator>
         <navigator class="navigator" url="/pagesAdmin/goodsManage/goodsManage" hover-class="none">
@@ -155,6 +155,7 @@ const memberTypes = [
       <view class="title">
         我的订单
         <navigator class="navigator"
+
           :url="memberStore.profile ? '/pagesOrder/list/list?type=0' : '/pages/login/login'"
           hover-class="none"
         >
