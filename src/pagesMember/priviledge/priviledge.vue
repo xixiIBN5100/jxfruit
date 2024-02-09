@@ -3,6 +3,7 @@ import { ref } from 'vue'
 import priviledgeList from './components/priviledgeList.vue'
 import { onLoad } from '@dcloudio/uni-app'
 import { useMemberStore } from '@/stores'
+import { getCoupon } from '@/services/coupon';
 
 const memberStore = useMemberStore()
 
@@ -10,12 +11,20 @@ const query = defineProps<{
   type: string
 }>()
 
-onLoad(() => {
+/*onLoad(() => {
     if (!memberStore.profile) {
     uni.navigateTo({
       url: '/pages/login/login'
     })
   }
+})*/
+//测试一下
+const getCouponData = async () => {
+  const res = await getCoupon()
+   console.log(res)
+}
+onLoad(() => {
+  getCouponData()
 })
 
 const priviledgeTabs = ref([
@@ -32,47 +41,33 @@ priviledgeTabs.value[activeIndex.value].isRender = true
 <template>
     <view>
         <view class="tabs">
-            <text
-                class="item"
-                v-for="(item, index) in priviledgeTabs"
-                :key="item.title"
-                @tap="
-                () => {
-                    activeIndex = index
-                    item.isRender = true
-                }
-                "
-            >
-                {{ item.title }}
+            <text class="item" v-for="(item, index) in priviledgeTabs" :key="item.title"
+              @tap="() => {activeIndex = index
+                           item.isRender = true }">
+                           {{ item.title }}
             </text>
             <!-- 游标 -->
             <view class="cursor" :style="{ left: activeIndex * 50 + 13 + '%' }"></view>
         </view>
-
-       <!-- <view v-for="item in priviledgeTabs" :key="item.title"> 
-          <priviledgeList v-if="item.isRender" />
-        </view>   <view v-for="item in priviledgeTabs" :key="item.title"> 
-          <priviledgeList v-if="item.isRender" />
-        </view> -->
          <!-- 滑动容器 -->
-      
+
         <swiper class="swiper" :current="activeIndex" @change="activeIndex = $event.detail.current">
           <!-- 滑动项 -->
           <swiper-item v-for="item in priviledgeTabs" :key="item.title">
             <!-- 订单列表 -->
-            <priviledgeList :priviledge-type="item.priviledgeType" v-if="item.isRender" />
+            <priviledgeList :priviledge-type="item.priviledgeType" v-show="item.isRender" />
           </swiper-item>
         </swiper>
     </view>
-    
- 
+
+
 </template>
 
 <style lang="scss">
 // 深度选择器修改 uni-data-picker 组件样式
 .tabs {
   display: flex;
-  
+
   justify-content: space-around;
   line-height: 60rpx;
   margin: 0 10rpx;

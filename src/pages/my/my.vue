@@ -189,7 +189,7 @@ const memberTypes = [
         我的权益
         <navigator
           class="navigator"
-          :url="memberStore.profile?
+          :url="true?
           '/pagesMember/priviledge/priviledge?type=0':'/pages/login/login'"
           hover-class="none">
           优惠券管理<text class="icon-right"></text>
@@ -201,7 +201,7 @@ const memberTypes = [
         <navigator
           v-for="item in priviledges"
           :key="item.id"
-          :url="memberStore.profile?
+          :url="true?
           `/pagesMember/priviledge/priviledge?type=${item.type}`:
           '/pages/login/login'"
           class="navigator"

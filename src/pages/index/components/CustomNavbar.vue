@@ -21,7 +21,7 @@ const searchGoodsData = async () => {
   <view class="navbar" :style="{ paddingTop: safeAreaInsets!.top + 30 + 'px' }">
     <!-- logo文字 -->
     <view class="logo">
-      <image class="logo-image" 
+      <image class="logo-image"
       mode="widthFix"
       src="https://image.familystudy.cn/image/jxfruit/%E6%AD%A3%E5%BC%8Flogo.webp"></image>
       <!-- <text class="logo" style="color: aliceblue;">践行鲜果</text> -->
@@ -62,7 +62,7 @@ const searchGoodsData = async () => {
     height: 64rpx;
     .logo-image {
       width: 300rpx;
-      
+
     }
     .logo-text {
       flex: 1;
@@ -74,8 +74,8 @@ const searchGoodsData = async () => {
       font-size: 26rpx;
     }
   }
- 
-  
+
+
 
   .search {
     width: 700rpx;
@@ -86,7 +86,7 @@ const searchGoodsData = async () => {
     padding: 0 10rpx 0 26rpx;
     top: 540rpx;
     left: 50%;
-    
+
     transform: translate(-50%);
     font-size: 28rpx;
     border-radius: 32rpx;
@@ -102,7 +102,7 @@ const searchGoodsData = async () => {
       padding: 15rpx;
     }
   }
-  
-  
+
+
 }
 </style>

@@ -2,7 +2,7 @@
     import type { CouponItem } from '@/types/coupon'
     import { getCoupon } from '@/services/coupon'
     import { useCouponStore } from '@/stores/modules/coupon'
-    import { onLoad, onShareAppMessage, onShareTimeline } from '@dcloudio/uni-app'
+    import { onLoad} from '@dcloudio/uni-app'
     import { computed, ref } from 'vue'
 
     const couponList = ref<CouponItem[]>()
@@ -16,11 +16,11 @@
 
     // 获取页面参数
     const query = defineProps<{
-        totalPrice?: number
+        totalPrice: number
     }>()
 
     const onChangeCoupon = (item: CouponItem) => {
-        // 修改地址
+        // 修改选择的优惠券
         const couponStore = useCouponStore()
         couponStore.changeSelectedCoupon(item)
         // 返回上一页
@@ -30,15 +30,14 @@
 
 <template>
     <view class="coupon">
-        <view v-if="couponList?.length !== 0"> 
-            <template v-for="(item,index) in couponList" :key="index"
-            >
-                <view class="card" v-if = "item.isUsed === 0 && query?.totalPrice >= item.effectivePrice 
-                && query?.totalPrice >= item.price && item.expired === 0">
-                <!-- 订单信息 -->
+        <view v-if="couponList?.length !== 0">
+            <template v-for="(item,index) in couponList" :key="index">
+                <view class="card" v-if = "item.isUsed === 0 && query.totalPrice >= item.effectivePrice
+                && query.totalPrice >= item.price && item.expired === 0">
+                <!-- 优惠券信息 -->
                     <view>
                         <view><text style="font-size: 40rpx">￥</text>{{ item.price }}</view>
-                        <view>{{ item.type }}</view>        
+                        <view>{{ item.type }}</view>
                     </view>
                     <view class="regulation">
                         <view class="limit">满{{ item.effectivePrice }} 可用</view>
@@ -48,7 +47,7 @@
                 </view>
             </template>
         </view>
-        <view v-else> 
+        <view v-else>
             暂无合适的优惠券
         </view>
     </view>

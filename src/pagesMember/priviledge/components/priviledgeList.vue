@@ -33,7 +33,7 @@ const priviledgeList = ref<CouponItem[]>([])
 const isLoading = ref(false)
 
 const getMemberPriviledgeData = async () => {
-  // 如果数据出于加载中，退出函数
+  // 如果数据处于加载中，退出函数
   if (isLoading.value) return
   // 退出分页判断
   if (isFinish.value === true) {
@@ -51,7 +51,7 @@ const getMemberPriviledgeData = async () => {
   // priviledgeList.value = res.data
 
   console.log("privi", priviledgeList.value)
- 
+
   // // 分页条件
   if (queryParams.pageNum < res.data.pages) {
   //   // 页码累加
@@ -89,7 +89,7 @@ const recharge = () => {
   uni.showModal({
     title: '敬请期待'
   })
-  
+
 }
 
 
@@ -122,40 +122,41 @@ const onRefresherrefresh = async () => {
     @refresherrefresh="onRefresherrefresh"
     @scrolltolower="getMemberPriviledgeData"
   >
-    <view 
+    <view
     v-for="priviledge in priviledgeList" :key="priviledge.id"
-    v-if="props.priviledgeType === 0"  
+    v-if="props.priviledgeType === 0"
     >
       <view class="card"
-      :class="[(priviledge.isUsed === 1 || priviledge.expired === 1) ? 'used' : '']">
-      <!-- 订单信息 -->
+      :class="[(priviledge.isUsed ===CouponState.YiShiYong|| priviledge.expired === CouponState.YiGuoQi) ? 'used' : '']">
+      <!-- 优惠券信息 -->
       <view>
         <view><text style="font-size: 40rpx">￥</text>{{ priviledge.price }}</view>
-        <view>{{ priviledge.type }}</view>        
+        <view>{{ priviledge.type }}</view>
       </view>
       <view class="regulation">
         <view class="limit">满{{ priviledge.effectivePrice }} 可用</view>
         <view class="effective-time">有效期至：{{ priviledge.effectiveTime }}</view>
       </view>
-      <view class="use" @click="useCoupon(priviledge)">{{ priviledge.isUsed === 1 ? '已使用': 
+      <view class="use" @click="useCoupon(priviledge)">{{ priviledge.isUsed === 1 ? '已使用':
         (priviledge.expired === 1 ? '已过期': '使用')}}</view>
       </view>
     </view>
+    <!--展示会员信息-->
     <view class="member-card"  v-if="props.priviledgeType === 1" >
       <view class="text">您的会员等级为 V{{ member?.vipLevel }} </view>
       <view class="text">积分：{{ member?.points }} </view>
       <view class="recharge" @click="recharge">充值</view>
     </view>
-    <!-- 底部提示文字
+    <!-- 底部提示文字-->
     <view class="loading-text" :style="{ paddingBottom: safeAreaInsets?.bottom + 'px' }">
       {{ isFinish ? '没有更多数据~' : '正在加载...' }}
-    </view> -->
+    </view>
   </scroll-view>
 </template>
 
 <style lang="scss">
 
-// 订单列表
+// 优惠券列表
 .orders {
   height: 100%;
   .used {
