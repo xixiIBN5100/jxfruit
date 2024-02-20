@@ -1,6 +1,6 @@
 
 <script lang="ts" setup>
-import profile from '@/components/profile.vue'
+//import profile from '@/components/profile.vue'
 
 import type { MemberItem } from '@/types/member'
 import { getMemberInfo } from '@/services/member'
@@ -189,11 +189,17 @@ const memberTypes = [
         我的权益
         <navigator
           class="navigator"
-          :url="true?
-          '/pagesMember/priviledge/priviledge?type=0':'/pages/login/login'"
+          :url="memberStore.profile ?
+          '/pagesMember/priviledge/priviledge':'/pages/login/login'"
           hover-class="none">
-          优惠券管理<text class="icon-right"></text>
           全部<text class="icon-right"></text>
+         </navigator>
+        <navigator
+            class="navigator"
+            :url="memberStore.profile ?
+              '/pagesAdmin/couponManage/couponManage' : '/pages/login/login'"
+            hover-class="none">
+            优惠券管理<text class="icon-right"></text>
         </navigator>
       </view>
       <view class="section">
@@ -201,7 +207,7 @@ const memberTypes = [
         <navigator
           v-for="item in priviledges"
           :key="item.id"
-          :url="true?
+          :url="memberStore.profile ?
           `/pagesMember/priviledge/priviledge?type=${item.type}`:
           '/pages/login/login'"
           class="navigator"

@@ -1,71 +1,68 @@
 <script setup lang="ts">
 import { CouponState } from '@/services/constants'
 import { CouponStateList } from '@/services/constants'
-import type { CouponItem } from '@/types/coupon'
+import type { CouponItem, CouponQueryParams } from '@/types/coupon'
 import { getCoupon } from '@/services/coupon'
 import { onMounted, ref } from 'vue'
 import { useMemberStore } from '@/stores'
 import type { MemberItem } from '@/types/member'
 import { getMemberInfo } from '@/services/member'
-
+import type { SubTypeItem } from '@/types/coupon'
 // 获取屏幕边界到安全区域距离
 const { safeAreaInsets } = uni.getSystemInfoSync()
 
-const memberStore = useMemberStore()
 
-// 定义 porps
+// 定义 porps接收类型参数（优惠券/会员）
 const props = defineProps<{
   priviledgeType: number
 }>()
 
-// 请求参数
-const queryParams: Required<OrderListParams> = {
+
+// 分页参数（请求）
+const couponQueryParams: CouponQueryParams = {
+  pageSize: 10,
   pageNum: 1,
-  pageSize: 5,
-  orderState: props.orderState,
 }
 
-const emit = defineEmits(['showComment'])
 
-// 获取订单列表
-const priviledgeList = ref<CouponItem[]>([])
+
+
+// 获取优惠券子类列表
+const subTypes = ref<(SubTypeItem & { isFinish?: boolean })[]>([])
+
 // 是否加载中标记，用于防止滚动触底触发多次请求
 const isLoading = ref(false)
 
+
+//获取优惠券信息
 const getMemberPriviledgeData = async () => {
-  // 如果数据处于加载中，退出函数
+
+  // 如果正在等待数据获取（后端传过来）中，退出函数
   if (isLoading.value) return
-  // 退出分页判断
-  if (isFinish.value === true) {
-    return uni.showToast({ icon: 'none', title: '没有更多数据~' })
-  }
-  // 发送请求前，标记为加载中
+  // 发送请求前，标记一下正在调用获取数据接口
   isLoading.value = true
-  // 发送请求
-  const res = await getCoupon()
-  console.log(res.data)
-  // 发送请求后，重置标记
+  // 调用获取数据接口
+  const res = await getCoupon(couponQueryParams)
+  console.log(res)
   isLoading.value = false
-  // 数组追加
-  priviledgeList.value.push(...res.data)
-  // priviledgeList.value = res.data
-
-  console.log("privi", priviledgeList.value)
-
-  // // 分页条件
-  if (queryParams.pageNum < res.data.pages) {
-  //   // 页码累加
-    queryParams.pageNum++
-  } else {
-  //   // 分页已结束
-    isFinish.value = true
-  }
-
+  //保存子类列表
+ // subTypes.value = res.data.subTypes
+  /*
+    //分页条件
+    if (queryParams.pageNum < res.data.pages) {
+    //   // 页码累加
+      queryParams.pageNum++
+    } else {
+    //   // 分页已结束
+      isFinish.value = true
+    }
+  */
   // console.log("res", res.data.records)
 }
 
 const member = ref<MemberItem>()
 
+//获取会员信息
 const getMemberData = async () => {
 
   const res = await getMemberInfo()
@@ -81,7 +78,7 @@ onMounted(() => {
 
 const useCoupon = (priviledge: CouponItem) => {
   if (priviledge.isUsed === 0 && priviledge.expired === 0) {
-    uni.switchTab({url: '/pages/cart/cart'})
+    uni.switchTab({ url: '/pages/cart/cart' })
   }
 }
 const recharge = () => {
@@ -97,71 +94,166 @@ const recharge = () => {
 const isFinish = ref(false)
 // 是否触发下拉刷新
 const isTriggered = ref(false)
-// 自定义下拉刷新被触发
+// 监听下拉刷新动作
 const onRefresherrefresh = async () => {
   // 开始动画
   isTriggered.value = true
   // 重置数据
-  queryParams.pageNum = 1
-  priviledgeList.value = []
+  //queryParams.pageNum = 1
+  //priviledgeList.value= []
   isFinish.value = false
   // 加载数据
   await getMemberPriviledgeData()
   // 关闭动画
   isTriggered.value = false
 }
+const activeIndex = ref(0)
+/*
+//const subTypes = ref<(SubTypeItem & { finish?: boolean })[]>([])
+const getCouponData = async () => {
+  const res = await getCoupon( {
+    // 技巧：环境变量，开发环境，修改初始页面方便测试分页结束
+    page: import.meta.env.DEV ? 30 : 1,
+    pageSize: 10,
+  })
+  //当前推荐页的获取数据接口，!表示非空断言，因为逻辑上一定能取到
+  //首次获取，当前页面默认为1或者自定义（大一点）（开发环境）
+  // 保存子类列表
+  subTypes.value = res.result.subTypes
+}
+*/
+
+// 滚动触底
+const onScrolltolower = async () => {
+  // 根据高亮下标（当前下标）从子类列表引用当前子类
+  const currsubType = subTypes.value[activeIndex.value]
+  // 分页条件
+  if (currsubType.couponItems.page < currsubType.couponItems.pages) {
+    currsubType.couponItems.page++
+  } else {
+    // 标记子类已结束
+    currsubType.isFinish = true
+    // 退出并轻提示（存疑）
+    return uni.showToast({ icon: 'none', title: '没有更多数据了~' })
+  }
+/*
+  // 调用API传参（这里为触底获取数据）
+  const res = await getCoupon({
+    subType: currsubType.id,
+    page: currsubType.couponItems.page,
+    pageSize: currsubType.couponItems.pageSize,
+  })
+  //请求参数为当前子类的id+当前子类的商品集合（含分页参数）的页码、记录数
+  //均为后端传过来的（首次获取）
+
+
+  // res.result.subTypes:新的子类列表
+  //newsubTypes:新的当前子类
+  const newsubType = res.data.subTypes[activeIndex.value]
+  // （新的当前子类）里的商品集合（含分页参数）的（商品列表）解构并追加到-->
+  //  -->原当前子类的商品集合的商品列表,用于增加数据
+  currsubType.couponItems.items.push(...newsubType.couponItems.items)
+*/
+}
+
+
 </script>
 
 <template>
-  <scroll-view
-    enable-back-to-top
-    scroll-y
-    class="orders"
-    refresher-enabled
-    :refresher-triggered="isTriggered"
-    @refresherrefresh="onRefresherrefresh"
-    @scrolltolower="getMemberPriviledgeData"
-  >
-    <view
-    v-for="priviledge in priviledgeList" :key="priviledge.id"
-    v-if="props.priviledgeType === 0"
-    >
-      <view class="card"
-      :class="[(priviledge.isUsed ===CouponState.YiShiYong|| priviledge.expired === CouponState.YiGuoQi) ? 'used' : '']">
-      <!-- 优惠券信息 -->
-      <view>
-        <view><text style="font-size: 40rpx">￥</text>{{ priviledge.price }}</view>
-        <view>{{ priviledge.type }}</view>
-      </view>
-      <view class="regulation">
-        <view class="limit">满{{ priviledge.effectivePrice }} 可用</view>
-        <view class="effective-time">有效期至：{{ priviledge.effectiveTime }}</view>
-      </view>
-      <view class="use" @click="useCoupon(priviledge)">{{ priviledge.isUsed === 1 ? '已使用':
-        (priviledge.expired === 1 ? '已过期': '使用')}}</view>
-      </view>
-    </view>
-    <!--展示会员信息-->
-    <view class="member-card"  v-if="props.priviledgeType === 1" >
-      <view class="text">您的会员等级为 V{{ member?.vipLevel }} </view>
-      <view class="text">积分：{{ member?.points }} </view>
-      <view class="recharge" @click="recharge">充值</view>
-    </view>
-    <!-- 底部提示文字-->
-    <view class="loading-text" :style="{ paddingBottom: safeAreaInsets?.bottom + 'px' }">
-      {{ isFinish ? '没有更多数据~' : '正在加载...' }}
-    </view>
-  </scroll-view>
+  <!--展示会员信息-->
+  <view class="member-card" v-if="props.priviledgeType === 1">
+    <view class="text">您的会员等级为 V{{ member?.vipLevel }} </view>
+    <view class="text">积分：{{ member?.points }} </view>
+    <view class="recharge" @click="recharge">充值</view>
+  </view>
+  <!--展示优惠券信息-->
+  <view class="tabs" v-if="props.priviledgeType === 0">
+    <text class="item" v-for="(item, index) in CouponStateList" :key="item.id" @tap="() => { activeIndex = index }">
+      {{ item.text }}
+    </text>
+    <!-- 游标 -->
+    <view class="cursor" :style="{ left: activeIndex * 33 + 5 + '%' }"></view>
+  </view>
+  <swiper class="swiper" :current="activeIndex" @change="activeIndex = $event.detail.current" v-if="props.priviledgeType === 0">
+    <swiper-item v-for="item in subTypes" :key="item.id">
+      <scroll-view enable-back-to-top scroll-y class="coupons" refresher-enabled :refresher-triggered="isTriggered"
+        @refresherrefresh="onRefresherrefresh" @scrolltolower="onScrolltolower">
+
+        <view v-for="priviledge in item.couponItems.items" :key="priviledge.id" >
+          <view class="card"
+            :class="[(priviledge.isUsed === CouponState.YiShiYong || priviledge.expired === CouponState.YiGuoQi) ? 'used' : '']">
+            <!-- 优惠券信息 -->
+            <view>
+              <view><text style="font-size: 40rpx">￥</text>{{ priviledge.price }}</view>
+              <view>{{ priviledge.type }}</view>
+            </view>
+            <view class="regulation">
+              <view class="limit" v-if="priviledge.effectivePrice != 0">满{{ priviledge.effectivePrice }} 可用</view>
+              <view class="effective-time">有效期至：{{ priviledge.effectiveTime }}</view>
+            </view>
+            <view class="use" @click="useCoupon(priviledge)">{{ priviledge.isUsed === 1 ? '已使用' :
+              (priviledge.expired === 1 ? '已过期' : '使用') }}
+            </view>
+          </view>
+        </view>
+        <!-- 底部提示文字-->
+        <view class="loading-text" :style="{ paddingBottom: safeAreaInsets?.bottom + 'px' }">
+          {{ item.isFinish ? '没有更多数据~' : '正在加载...' }}
+        </view>
+      </scroll-view>
+    </swiper-item>
+  </swiper>
 </template>
 
 <style lang="scss">
+.swiper {
+  background-color: #f7f7f8;
+  height: 100vh;
+  width: 750rpx;
+}
+
+.tabs {
+  display: flex;
+
+  justify-content: space-around;
+  line-height: 60rpx;
+  margin: 0 10rpx;
+  background-color: #fff;
+  box-shadow: 0 4rpx 6rpx rgba(240, 240, 240, 0.6);
+  position: relative;
+  z-index: 9;
+
+  .item {
+    flex: 1;
+    text-align: center;
+    padding: 20rpx;
+    font-size: 28rpx;
+    color: #262626;
+  }
+
+  .cursor {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 25%;
+    height: 6rpx;
+    padding: 0 50rpx;
+    background-color: rgb(41, 205, 131);
+    /* 过渡效果 */
+    transition: all 0.4s;
+  }
+}
 
 // 优惠券列表
-.orders {
+.coupons {
   height: 100%;
+  text-align: center;
+
   .used {
     background-color: grey !important;
     color: black !important;
+    border: 1rpx solid black !important;
+
     .use {
       border: 1rpx solid black !important;
     }
@@ -174,20 +266,29 @@ const onRefresherrefresh = async () => {
     padding: 30rpx;
     box-sizing: border-box;
     margin: 20rpx 20rpx 0;
-    border-radius: 10rpx;
     background-color: #ffe6e6;
-    color:#ff0000;
+    color: #ff0000;
     display: flex;
     border-radius: 30rpx;
+    border: 1px solid rgba(255, 0, 0, 0.9);
+
     &:last-child {
       padding-bottom: 40rpx;
     }
 
     .regulation {
       font-size: 25rpx;
+
       .limit {
-          font-size: 35rpx;
-          font-weight: 700;
+        font-size: 35rpx;
+        font-weight: 700;
+        margin-bottom: 15rpx;
+      }
+
+      .effective-time {
+        width: 330rpx;
+        font-size: 30rpx;
+        font-weight: 700;
       }
     }
 
@@ -196,17 +297,26 @@ const onRefresherrefresh = async () => {
       width: 120rpx;
       height: 60rpx;
       font-size: 30rpx;
-      text-align: center;
-      line-height: 60rpx;
-      border: 1rpx solid #ff0000;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      //line-height: 60rpx;
+      border: 2px solid rgb(241, 48, 48);
     }
   }
 
-  .member-card {
+  .loading-text {
+    text-align: center;
+    font-size: 28rpx;
+    color: #666;
+    padding: 20rpx 0;
+  }
+}
+.member-card {
     width: 700rpx;
     height: 300rpx;
     border-radius: 20rpx;
-    background-color: rgb(255,234,189);;
+    background-color: rgb(255, 234, 189);
     margin: 30rpx auto;
     padding: 30rpx;
     box-sizing: border-box;
@@ -228,179 +338,4 @@ const onRefresherrefresh = async () => {
       background-color: white;
     }
   }
-
-  .status {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    font-size: 28rpx;
-    color: #999;
-    margin-bottom: 15rpx;
-
-    .date {
-      color: #666;
-      flex: 1;
-    }
-
-    .primary {
-      color: #ff9240;
-    }
-
-    .icon-delete {
-      line-height: 1;
-      margin-left: 10rpx;
-      padding-left: 10rpx;
-      border-left: 1rpx solid #e3e3e3;
-    }
-  }
-
-  .goods {
-    display: flex;
-    margin-bottom: 20rpx;
-
-    .cover {
-      width: 170rpx;
-      height: 170rpx;
-      margin-right: 20rpx;
-      border-radius: 10rpx;
-      overflow: hidden;
-      position: relative;
-      .image {
-        width: 170rpx;
-        height: 170rpx;
-      }
-    }
-
-    .quantity {
-      position: absolute;
-      bottom: 0;
-      right: 0;
-      line-height: 1;
-      padding: 6rpx 4rpx 6rpx 8rpx;
-      font-size: 24rpx;
-      color: #fff;
-      border-radius: 10rpx 0 0 0;
-      background-color: rgba(0, 0, 0, 0.6);
-    }
-
-    .meta {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-    }
-
-    .name {
-      height: 80rpx;
-      font-size: 26rpx;
-      color: #444;
-    }
-
-    .type {
-      line-height: 1.8;
-      padding: 0 15rpx;
-      margin-top: 10rpx;
-      font-size: 24rpx;
-      align-self: flex-start;
-      border-radius: 4rpx;
-      color: #888;
-      background-color: #f7f7f8;
-    }
-
-    .single-price {
-      margin-top: 30rpx;
-      width: fit-content;
-      font-size: 35rpx;
-      color: #ff9240;
-    }
-
-    .sku-title{
-      display: flex;
-      justify-content: space-between;
-    }
-
-    .num {
-      font-size: 30rpx;
-      width:45rpx;
-      height: 45rpx;
-      border-radius: 5rpx;
-      border: 1rpx solid gainsboro;
-      text-align: center;
-      line-height: 45rpx;
-    }
-
-    .more {
-      flex: 1;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 22rpx;
-      color: #333;
-    }
-  }
-
-  .payment {
-    display: flex;
-    justify-content: flex-end;
-    align-items: center;
-    line-height: 1;
-    padding: 20rpx 0;
-    text-align: right;
-    color: #999;
-    font-size: 28rpx;
-    border-bottom: 1rpx solid #eee;
-
-    .quantity {
-      font-size: 24rpx;
-      margin-right: 16rpx;
-    }
-
-    .amount {
-      color: #444;
-      margin-left: 6rpx;
-    }
-
-    .symbol {
-      font-size: 20rpx;
-    }
-  }
-
-  .action {
-    display: flex;
-    justify-content: flex-end;
-    align-items: center;
-    padding-top: 20rpx;
-
-    .button {
-      width: 180rpx;
-      height: 60rpx;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      margin-left: 20rpx;
-      border-radius: 60rpx;
-      border: 1rpx solid #ccc;
-      font-size: 26rpx;
-      color: #444;
-    }
-
-    .secondary {
-      color: rgb(255,234,189);;
-      border-color: rgb(255,234,189);;
-    }
-
-    .primary {
-      color: #fff;
-      background-color: rgb(255,234,189);;
-      border-color: rgb(255,234,189);;
-    }
-  }
-
-  .loading-text {
-    text-align: center;
-    font-size: 28rpx;
-    color: #666;
-    padding: 20rpx 0;
-  }
-}
 </style>

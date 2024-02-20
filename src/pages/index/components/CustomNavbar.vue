@@ -24,7 +24,7 @@ const searchGoodsData = async () => {
       <image class="logo-image"
       mode="widthFix"
       src="https://image.familystudy.cn/image/jxfruit/%E6%AD%A3%E5%BC%8Flogo.webp"></image>
-      <!-- <text class="logo" style="color: aliceblue;">践行鲜果</text> -->
+      <!--<text class="logo" style="color: aliceblue;">践行鲜果</text>-->
       <!-- <text class="logo-text">新鲜 · 亲民 · 快捷</text> -->
     </view>
     <!-- 搜索条 -->
