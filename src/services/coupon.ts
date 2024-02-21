@@ -29,7 +29,7 @@ export const getCoupon = (data:subTypeParams) => {
     })
 }
 
-export const getCouponAdmin = (data:PageParams) => {
+export const getCouponAdmin = (data:subTypeParams) => {
     return http<CouponResult> ({
         url: '/coupon/admin/query',
         method: 'GET',

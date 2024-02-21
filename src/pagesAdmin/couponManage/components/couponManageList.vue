@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { CouponState } from '@/services/constants'
 import { CouponStateList } from '@/services/constants'
-import type { CouponItem } from '@/types/coupon'
+import type { CouponItem, subTypeParams } from '@/types/coupon'
 import { deleteCouponById, getCoupon, getCouponAdmin, getNewCoupon } from '@/services/coupon'
 import { isShallow, onMounted, ref } from 'vue'
 import { useMemberStore } from '@/stores'
@@ -18,7 +18,8 @@ import type { PageParams } from '@/types/global'
 const { safeAreaInsets } = uni.getSystemInfoSync()
 
 // 分页参数（请求）
-const adminQueryParams: Required<PageParams> = {
+const adminQueryParams: Required<subTypeParams> = {
+  subType: 1,
   pageNum: 1,
   pageSize: 2,
 }
@@ -62,14 +63,13 @@ const onFilter = (list: CouponItem[]) => {
   }
 
   //如果没有拿到对应数据，直接再次获取下一页数据
-  if (newCouponAdminList.value.length)
-  {
+  if (newCouponAdminList.value.length) {
     couponAdminList.value.push(...newCouponAdminList.value)
   }
   else {
     //问题：执行顺序调整一下，获取已过期优惠券
-     adminQueryParams.pageNum++
-     getCouponAdminData()
+    adminQueryParams.pageNum++
+    getCouponAdminData()
   }
 
 
