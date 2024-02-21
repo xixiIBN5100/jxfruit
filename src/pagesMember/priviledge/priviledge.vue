@@ -40,7 +40,7 @@ const activeIndex = ref(priviledgeTabs.value.findIndex((v) => v.priviledgeType =
     <swiper class="swiper" :current="activeIndex" @change="activeIndex = $event.detail.current">
       <!-- 滑动项 -->
       <swiper-item v-for="item in priviledgeTabs" :key="item.title">
-        <!-- 订单列表 -->
+        <!-- 权益列表 -->
         <priviledgeList :priviledge-type="item.priviledgeType" />
       </swiper-item>
     </swiper>

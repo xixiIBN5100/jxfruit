@@ -27,8 +27,8 @@ export type NewCouponData = {
   username:string
 }
 
-//管理员查询优惠券结果类型
-export type AdminCouponResult = {
+//查询优惠券结果类型
+export type CouponResult = {
   current: number
   pages: number
   records: CouponItem[]
@@ -36,35 +36,13 @@ export type AdminCouponResult = {
   total:number
 }
 
-
-
-
-
-
-
-//（优惠券获取数据结果）类型
-export type CouponResult = {
-  /** id信息 */
-  id: string
-  /** 活动图片 */
-  bannerPicture: string
-  /** 活动标题 */
-  title: string
-  /* 子类列表 */
-  subTypes: SubTypeItem[]
-}
-
 /* 优惠券-子类 */
 export type SubTypeItem = {
-  /** 子类id */
-  id: string
-  /** 子类标题 */
-  title: string
-  /** 子类对应的优惠券集合（含分页参数） */
-  couponItems: PageResult<CouponItem>
+  subTypeParams:subTypeParams
+  couponItems: CouponItem[]
 }
 
-export type CouponQueryParams = {
+export type subTypeParams = {
   subType?: number
   pageSize?: number
   pageNum?:number

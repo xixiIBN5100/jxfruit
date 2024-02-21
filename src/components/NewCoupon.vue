@@ -29,8 +29,12 @@ const newCoupon = ref<NewCouponData>(
   }
 )
 //可以初始化newCouponQuery{type：“”，……}以防止清空newCouponQuery时访问类型报错
+
+
 //const username = memberStore.profile!.username
 //const newCouponData: ComputedRef<NewCouponData> = computed(() =>({ ...newCoupon.value, username }))
+
+  
  newCoupon.value.username= memberStore.profile!.username
 //处理输入框placeholder（待优化）
 const placeholder1 = ref("请输入优惠券的类型")

@@ -1,63 +1,55 @@
 <script setup lang="ts">
 import { CouponState } from '@/services/constants'
 import { CouponStateList } from '@/services/constants'
-import type { CouponItem, CouponQueryParams } from '@/types/coupon'
+import type { CouponItem, SubTypeItem, subTypeParams } from '@/types/coupon'
 import { getCoupon } from '@/services/coupon'
 import { onMounted, ref } from 'vue'
 import { useMemberStore } from '@/stores'
 import type { MemberItem } from '@/types/member'
 import { getMemberInfo } from '@/services/member'
-import type { SubTypeItem } from '@/types/coupon'
 // 获取屏幕边界到安全区域距离
 const { safeAreaInsets } = uni.getSystemInfoSync()
 
 
-// 定义 porps接收类型参数（优惠券/会员）
+// 定义 porps接收权益类型参数（优惠券/会员）
 const props = defineProps<{
   priviledgeType: number
 }>()
-
-
-// 分页参数（请求）
-const couponQueryParams: CouponQueryParams = {
-  pageSize: 10,
-  pageNum: 1,
-}
-
-
-
-
-// 获取优惠券子类列表
-const subTypes = ref<(SubTypeItem & { isFinish?: boolean })[]>([])
-
+// 优惠券子类列表(前端自定义)
+const subTypes = ref<(SubTypeItem & { isFinish?: boolean })[]>([
+  { subTypeParams: { subType: 0, pageNum: 1, pageSize: 2, }, couponItems: [] },
+  { subTypeParams: { subType: 1, pageNum: 1, pageSize: 2, }, couponItems: [] },
+  { subTypeParams: { subType: 2, pageNum: 1, pageSize: 2, }, couponItems: [] }
+])
+// 是否分页结束
+const isFinish = ref(false)
 // 是否加载中标记，用于防止滚动触底触发多次请求
 const isLoading = ref(false)
-
-
-//获取优惠券信息
-const getMemberPriviledgeData = async () => {
-
-  // 如果正在等待数据获取（后端传过来）中，退出函数
-  if (isLoading.value) return
-  // 发送请求前，标记一下正在调用获取数据接口
+//初始化函数
+const onInitialize = async (QueryParams: subTypeParams) => {
   isLoading.value = true
-  // 调用获取数据接口
-  const res = await getCoupon(couponQueryParams)
-  console.log(res)
+  const res = await getCoupon(QueryParams)
   isLoading.value = false
-  //保存子类列表
- // subTypes.value = res.data.subTypes
-  /*
-    //分页条件
-    if (queryParams.pageNum < res.data.pages) {
-    //   // 页码累加
-      queryParams.pageNum++
-    } else {
-    //   // 分页已结束
-      isFinish.value = true
-    }
-  */
-  // console.log("res", res.data.records)
+  //引用当前子类
+  const currSubType = subTypes.value[index.value]
+  currSubType.couponItems = res.data.records
+  //分页处理
+  if (currSubType.subTypeParams.pageNum! < res.data.pages) {
+    currSubType.subTypeParams.pageNum!++
+  }
+  else {
+    //动态添加isFinish属性并赋值
+    currSubType.isFinish = true
+  }
+  index.value++
+}
+const index = ref(0)
+//获取优惠券信息
+const getMemberCouponData = async () => {
+  //初次获取数据并做相应处理
+  await onInitialize(subTypes.value[index.value].subTypeParams)
+  await onInitialize(subTypes.value[index.value].subTypeParams)
+  await onInitialize(subTypes.value[index.value].subTypeParams)
 }
 
 const member = ref<MemberItem>()
@@ -72,7 +64,7 @@ const getMemberData = async () => {
 
 
 onMounted(() => {
-  getMemberPriviledgeData()
+  getMemberCouponData()
   getMemberData()
 })
 
@@ -90,70 +82,61 @@ const recharge = () => {
 }
 
 
-// 是否分页结束
-const isFinish = ref(false)
+
 // 是否触发下拉刷新
 const isTriggered = ref(false)
+
+
 // 监听下拉刷新动作
 const onRefresherrefresh = async () => {
   // 开始动画
   isTriggered.value = true
   // 重置数据
-  //queryParams.pageNum = 1
-  //priviledgeList.value= []
+  const currSubType = subTypes.value[activeIndex.value]
+  currSubType.subTypeParams.pageNum=1
+  currSubType.couponItems=[]
   isFinish.value = false
+  if(isLoading.value)return
   // 加载数据
-  await getMemberPriviledgeData()
+  isLoading.value=true
+  const res=await getCoupon(currSubType.subTypeParams)
+  isLoading.value = false
+  //分页处理
+  if (currSubType.subTypeParams.pageNum! < res.data.pages) {
+    currSubType.subTypeParams.pageNum!++
+  }
+  else {
+    currSubType.isFinish = true
+  }
+  const newCouponItem = res.data.records
+  currSubType.couponItems.push(...newCouponItem)
   // 关闭动画
   isTriggered.value = false
 }
 const activeIndex = ref(0)
-/*
-//const subTypes = ref<(SubTypeItem & { finish?: boolean })[]>([])
-const getCouponData = async () => {
-  const res = await getCoupon( {
-    // 技巧：环境变量，开发环境，修改初始页面方便测试分页结束
-    page: import.meta.env.DEV ? 30 : 1,
-    pageSize: 10,
-  })
-  //当前推荐页的获取数据接口，!表示非空断言，因为逻辑上一定能取到
-  //首次获取，当前页面默认为1或者自定义（大一点）（开发环境）
-  // 保存子类列表
-  subTypes.value = res.result.subTypes
-}
-*/
-
 // 滚动触底
 const onScrolltolower = async () => {
   // 根据高亮下标（当前下标）从子类列表引用当前子类
-  const currsubType = subTypes.value[activeIndex.value]
-  // 分页条件
-  if (currsubType.couponItems.page < currsubType.couponItems.pages) {
-    currsubType.couponItems.page++
-  } else {
-    // 标记子类已结束
-    currsubType.isFinish = true
-    // 退出并轻提示（存疑）
+  const currSubType = subTypes.value[activeIndex.value]
+  if (currSubType.isFinish) {
+    // 退出并轻提示
     return uni.showToast({ icon: 'none', title: '没有更多数据了~' })
   }
-/*
-  // 调用API传参（这里为触底获取数据）
-  const res = await getCoupon({
-    subType: currsubType.id,
-    page: currsubType.couponItems.page,
-    pageSize: currsubType.couponItems.pageSize,
-  })
-  //请求参数为当前子类的id+当前子类的商品集合（含分页参数）的页码、记录数
-  //均为后端传过来的（首次获取）
-
-
-  // res.result.subTypes:新的子类列表
-  //newsubTypes:新的当前子类
-  const newsubType = res.data.subTypes[activeIndex.value]
-  // （新的当前子类）里的商品集合（含分页参数）的（商品列表）解构并追加到-->
-  //  -->原当前子类的商品集合的商品列表,用于增加数据
-  currsubType.couponItems.items.push(...newsubType.couponItems.items)
-*/
+  if (isLoading.value) return
+  isLoading.value=true
+  const res = await getCoupon(
+    currSubType.subTypeParams
+  )
+  isLoading.value=false
+  //分页处理
+  if (currSubType.subTypeParams.pageNum! < res.data.pages) {
+    currSubType.subTypeParams.pageNum!++
+  }
+  else {
+    currSubType.isFinish = true
+  }
+  const newCouponItem = res.data.records
+  currSubType.couponItems.push(...newCouponItem)
 }
 
 
@@ -174,31 +157,32 @@ const onScrolltolower = async () => {
     <!-- 游标 -->
     <view class="cursor" :style="{ left: activeIndex * 33 + 5 + '%' }"></view>
   </view>
-  <swiper class="swiper" :current="activeIndex" @change="activeIndex = $event.detail.current" v-if="props.priviledgeType === 0">
-    <swiper-item v-for="item in subTypes" :key="item.id">
+  <swiper class="swiper" :current="activeIndex" @change="activeIndex = $event.detail.current"
+    v-if="props.priviledgeType === 0">
+    <swiper-item v-for="(item, index) in subTypes" :key="index">
       <scroll-view enable-back-to-top scroll-y class="coupons" refresher-enabled :refresher-triggered="isTriggered"
         @refresherrefresh="onRefresherrefresh" @scrolltolower="onScrolltolower">
 
-        <view v-for="priviledge in item.couponItems.items" :key="priviledge.id" >
+        <view v-for="coupon in item.couponItems" :key="coupon.id">
           <view class="card"
-            :class="[(priviledge.isUsed === CouponState.YiShiYong || priviledge.expired === CouponState.YiGuoQi) ? 'used' : '']">
+            :class="[(coupon.isUsed === CouponState.YiShiYong || coupon.expired === CouponState.YiGuoQi) ? 'used' : '']">
             <!-- 优惠券信息 -->
             <view>
-              <view><text style="font-size: 40rpx">￥</text>{{ priviledge.price }}</view>
-              <view>{{ priviledge.type }}</view>
+              <view><text style="font-size: 40rpx">￥</text>{{ coupon.price }}</view>
+              <view>{{ coupon.type }}</view>
             </view>
             <view class="regulation">
-              <view class="limit" v-if="priviledge.effectivePrice != 0">满{{ priviledge.effectivePrice }} 可用</view>
-              <view class="effective-time">有效期至：{{ priviledge.effectiveTime }}</view>
+              <view class="limit" v-if="coupon.effectivePrice != 0">满{{ coupon.effectivePrice }} 可用</view>
+              <view class="effective-time">有效期至：{{ coupon.effectiveTime }}</view>
             </view>
-            <view class="use" @click="useCoupon(priviledge)">{{ priviledge.isUsed === 1 ? '已使用' :
-              (priviledge.expired === 1 ? '已过期' : '使用') }}
+            <view class="use" @click="useCoupon(coupon)">{{ coupon.isUsed === 1 ? '已使用' :
+              (coupon.expired === 1 ? '已过期' : '使用') }}
             </view>
           </view>
         </view>
         <!-- 底部提示文字-->
         <view class="loading-text" :style="{ paddingBottom: safeAreaInsets?.bottom + 'px' }">
-          {{ item.isFinish ? '没有更多数据~' : '正在加载...' }}
+          {{ item.isFinish ? '没有更多数据~' : (isLoading ? '正在加载中...' : '滚动获取下一页数据...') }}
         </view>
       </scroll-view>
     </swiper-item>
@@ -312,30 +296,31 @@ const onScrolltolower = async () => {
     padding: 20rpx 0;
   }
 }
+
 .member-card {
-    width: 700rpx;
-    height: 300rpx;
-    border-radius: 20rpx;
-    background-color: rgb(255, 234, 189);
-    margin: 30rpx auto;
-    padding: 30rpx;
-    box-sizing: border-box;
-    position: relative;
+  width: 700rpx;
+  height: 300rpx;
+  border-radius: 20rpx;
+  background-color: rgb(255, 234, 189);
+  margin: 30rpx auto;
+  padding: 30rpx;
+  box-sizing: border-box;
+  position: relative;
 
-    .text {
-      font-size: 35rpx;
-    }
-
-    .recharge {
-      position: absolute;
-      bottom: 20rpx;
-      right: 20rpx;
-      width: 100rpx;
-      height: 50rpx;
-      line-height: 50rpx;
-      text-align: center;
-      border-radius: 20rpx;
-      background-color: white;
-    }
+  .text {
+    font-size: 35rpx;
   }
+
+  .recharge {
+    position: absolute;
+    bottom: 20rpx;
+    right: 20rpx;
+    width: 100rpx;
+    height: 50rpx;
+    line-height: 50rpx;
+    text-align: center;
+    border-radius: 20rpx;
+    background-color: white;
+  }
+}
 </style>

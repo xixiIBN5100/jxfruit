@@ -18,7 +18,7 @@ import type { PageParams } from '@/types/global'
 const { safeAreaInsets } = uni.getSystemInfoSync()
 
 // 分页参数（请求）
-const adminQueryParams:Required<PageParams>  = {
+const adminQueryParams: Required<PageParams> = {
   pageNum: 1,
   pageSize: 2,
 }
@@ -34,17 +34,18 @@ const isLoading = ref(false)
 
 const couponStateIndex = props.couponStateType
 
+//管理员优惠券列表
+const couponAdminList = ref<CouponItem[]>([])
+//临时备份列表
+const couponRecordList = ref<CouponItem[]>([])
 //添加可用优惠券(待定)
 const Add = async () => {
-     //重新获取数据
-    await getCouponAdminData()
+  //还原到获取本页数据之前的状态
+  couponAdminList.value = [...couponRecordList.value]
+  //重新获取数据
+  isFinish.value = false
+  await getCouponAdminData()
 }
-
-//准备优惠券列表
-const couponAdminList = ref<CouponItem[]>([])
-
-
-
 //Tip:filter并不会改变原数组，所以一定要先存起来
 
 //筛选对应状态的优惠券数组
@@ -59,7 +60,18 @@ const onFilter = (list: CouponItem[]) => {
     newCouponAdminList.value = list.filter(coupon => !(coupon.isUsed === CouponState.YiShiYong || coupon.expired === CouponState.YiGuoQi)
     )
   }
-  couponAdminList.value.push(...newCouponAdminList.value)
+
+  //如果没有拿到对应数据，直接再次获取下一页数据
+  if (newCouponAdminList.value.length)
+  {
+    couponAdminList.value.push(...newCouponAdminList.value)
+  }
+  else {
+    //问题：执行顺序调整一下，获取已过期优惠券
+     adminQueryParams.pageNum++
+     getCouponAdminData()
+  }
+
 
 }
 // 是否分页结束
@@ -81,36 +93,37 @@ const getCouponAdminData = async () => {
   const res = await getCouponAdmin(adminQueryParams)
   // 发送请求后，重置标记
   isLoading.value = false
+  //备份
+  couponRecordList.value = [...couponAdminList.value]
   //数组筛选后追加
   onFilter(res.data.records)
-    //分页条件
-    if (adminQueryParams.pageNum< res.data.pages) {
-    //   // 页码累加
-      adminQueryParams.pageNum++
-    }
-    else {
-      // 分页已结束
-      isFinish.value = true
-    }
+  //分页条件
+  if (adminQueryParams.pageNum < res.data.pages) {
+    // 页码累加
+    adminQueryParams.pageNum++
+  }
+  else {
+    // 分页已结束
+    isFinish.value = true
+  }
 }
 const onDelete = (id: number) => {
   uni.showModal({
     content: '是否删除',
     confirmColor: 'rgb(255,234,189)',
     success: async (res) => {
-      if (res.confirm)
+      if (res.confirm) {
         //后端删除单个优惠券
         await deleteCouponById(id.toString())
-      //前端删优惠券
-      couponAdminList.value=couponAdminList.value.filter(item=>item.id!=id)
-
-
+        //前端删优惠券
+        couponAdminList.value = couponAdminList.value.filter(item => item.id != id)
+      }
     },
   }
   )
 
 }
-const couponShow=ref(true)
+const couponShow = ref(true)
 const getNewCouponData = () => {
   //if (isLoading.value) return
   isShow.value = true
@@ -121,7 +134,7 @@ const isShow = ref<boolean>()
 
 const close = () => {
   isShow.value = false
-  couponShow.value=true
+  couponShow.value = true
 }
 
 onMounted(() => {
@@ -137,11 +150,11 @@ const onRefresherrefresh = async () => {
   // 开始动画
   isTriggered.value = true
   // 重置数据
-   adminQueryParams.pageNum = 1
-   couponAdminList.value= []
-   isFinish.value = false
+  adminQueryParams.pageNum = 1
+  couponAdminList.value = []
+  isFinish.value = false
   // 加载数据
-   await getCouponAdminData()
+  await getCouponAdminData()
   // 先等待成功获取数据，再关闭动画
   isTriggered.value = false
 }
@@ -202,7 +215,7 @@ const  = async () => {
 
 <template>
   <NewCoupon @close="close" style="position: fixed; z-index: 10" v-if="isShow" @add="Add"></NewCoupon>
-  <scroll-view enable-back-to-top scroll-y class="coupons" refresher-enabled :refresher-triggered="isTriggered "
+  <scroll-view enable-back-to-top scroll-y class="coupons" refresher-enabled :refresher-triggered="isTriggered"
     @refresherrefresh="onRefresherrefresh" @scrolltolower="getCouponAdminData" v-show='couponShow'>
     <view v-for="couponAdmin in couponAdminList" :key="couponAdmin.id">
       <!--已使用和已过期的样式-->
@@ -238,8 +251,8 @@ const  = async () => {
       </view>
     </view>
     <!-- 底部提示文字-->
-    <view class="loading-text" :style="{ paddingBottom: safeAreaInsets?.bottom + 'px' }" v-if="couponAdminList.length">
-      {{ isFinish ? '没有更多数据~' : '滚动获取更多数据...' }}
+    <view class="loading-text" :style="{ paddingBottom: safeAreaInsets!.bottom + 100 + 'px' }">
+      {{ isFinish ? '没有更多数据~' : (isLoading ? '正在加载中...' : '滚动获取下一页数据...') }}
     </view>
   </scroll-view>
 </template>
@@ -258,7 +271,8 @@ const  = async () => {
     .use {
       border: 1rpx solid black !important;
     }
-    .button{
+
+    .button {
       border: 2px solid rgb(184, 154, 154) !important;
     }
   }
@@ -322,6 +336,7 @@ const  = async () => {
   .delete {
     display: flex;
     align-items: center;
+
     .button {
       display: flex;
       justify-content: center;
@@ -334,7 +349,7 @@ const  = async () => {
       line-height: 1.5;
       color: #fff;
       font-size: 23rpx;
-      letter-spacing: 1rpx;//字间距
+      letter-spacing: 1rpx; //字间距
       border: 2px solid rgb(243, 218, 218);
       border-radius: 50%;
     }
@@ -358,7 +373,8 @@ const  = async () => {
     display: flex;
     border-radius: 30rpx;
     border: 1px solid rgb(55, 134, 195);
-    margin-bottom: 50rpx;
+    margin-bottom: 0rpx;
+
     &:last-child {
       padding-bottom: 40rpx;
     }
