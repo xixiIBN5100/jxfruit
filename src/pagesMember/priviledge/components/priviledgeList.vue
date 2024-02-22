@@ -180,7 +180,7 @@ const onScrolltolower = async () => {
           </view>
         </view>
         <!-- 底部提示文字-->
-        <view class="loading-text" :style="{ paddingBottom: safeAreaInsets?.bottom + 'px' }">
+        <view class="loading-text" :style="{ paddingBottom: safeAreaInsets!.bottom + 100 +'px' }">
           {{ item.isFinish ? '没有更多数据~' : (isLoading ? '正在加载中...' : '滚动获取数据') }}
         </view>
       </scroll-view>
