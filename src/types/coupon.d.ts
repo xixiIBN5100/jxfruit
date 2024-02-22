@@ -11,14 +11,6 @@ export type CouponItem = {
     expired: number
     username:string
 }
-
-export type NewCoupon = {
-  type: string
-  price: number
-  effectivePrice: number
-  effectiveTime: string
-}
-
 export type NewCouponData = {
   type: string
   price: number

@@ -8,8 +8,8 @@ const memberStore = useMemberStore()
 
 const CouponTabs = [
   { id: 0, title: "可使用" },
-  { id: 1, title: "已使用" },
-  { id: 2, title: "已过期" },
+  { id: 1, title: "已过期" },
+  { id: 2, title: "已使用" },
 ]
 
 onLoad(() => {

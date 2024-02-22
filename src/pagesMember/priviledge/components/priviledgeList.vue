@@ -21,8 +21,7 @@ const subTypes = ref<(SubTypeItem & { isFinish?: boolean })[]>([
   { subTypeParams: { subType: 1, pageNum: 1, pageSize: 2, }, couponItems: [] },
   { subTypeParams: { subType: 2, pageNum: 1, pageSize: 2, }, couponItems: [] }
 ])
-// 是否分页结束
-const isFinish = ref(false)
+
 // 是否加载中标记，用于防止滚动触底触发多次请求
 const isLoading = ref(false)
 //初始化函数
@@ -95,7 +94,7 @@ const onRefresherrefresh = async () => {
   const currSubType = subTypes.value[activeIndex.value]
   currSubType.subTypeParams.pageNum=1
   currSubType.couponItems=[]
-  isFinish.value = false
+  currSubType.isFinish = false
   if(isLoading.value)return
   // 加载数据
   isLoading.value=true
@@ -182,7 +181,7 @@ const onScrolltolower = async () => {
         </view>
         <!-- 底部提示文字-->
         <view class="loading-text" :style="{ paddingBottom: safeAreaInsets?.bottom + 'px' }">
-          {{ item.isFinish ? '没有更多数据~' : (isLoading ? '正在加载中...' : '滚动获取下一页数据...') }}
+          {{ item.isFinish ? '没有更多数据~' : (isLoading ? '正在加载中...' : '滚动获取数据') }}
         </view>
       </scroll-view>
     </swiper-item>

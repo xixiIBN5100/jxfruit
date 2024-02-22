@@ -1,18 +1,5 @@
-import type { CouponResult, CouponItem, subTypeParams, NewCoupon, NewCouponData} from "@/types/coupon"
+import type { CouponResult, CouponItem, subTypeParams,NewCouponData} from "@/types/coupon"
 import { http } from "@/utils/http"
-import type { PageParams } from '@/types/global'
-/*
-export const getCoupon = (data?: CouponParams) => {
-  return http<CouponResult>({
-    method: 'GET',
-    url: '/coupon/query/self',
-    data,
-  })
-}
-
-*/
-
-
 export const getDefaultCoupon = () => {
     return http<CouponItem> ({
         url: '/coupon/query/default',
@@ -23,17 +10,15 @@ export const getDefaultCoupon = () => {
 
 export const getCoupon = (data:subTypeParams) => {
     return http<CouponResult>({
-        url: '/coupon/query/self',
+        url: `/coupon/query/self?subType=${data.subType}&pageSize=${data.pageSize}&pageNum=${data.pageNum}`,
         method: 'GET',
-        data
     })
 }
 
 export const getCouponAdmin = (data:subTypeParams) => {
     return http<CouponResult> ({
-        url: '/coupon/admin/query',
+        url: `/coupon/admin/query?subType=${data.subType}&pageSize=${data.pageSize}&pageNum=${data.pageNum}`,
         method: 'GET',
-        data
     })
 }
 

@@ -1,8 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref, computed,type ComputedRef } from 'vue'
-import { onLoad, onReady } from '@dcloudio/uni-app'
-import { addComment } from '@/services/comment'
-import type { CouponItem, NewCoupon, NewCouponData } from '@/types/coupon';
+import type { CouponItem,  NewCouponData } from '@/types/coupon';
 import { useMemberStore } from '@/stores';
 import { getNewCoupon } from '@/services/coupon';
 
@@ -30,12 +28,7 @@ const newCoupon = ref<NewCouponData>(
 )
 //可以初始化newCouponQuery{type：“”，……}以防止清空newCouponQuery时访问类型报错
 
-
-//const username = memberStore.profile!.username
-//const newCouponData: ComputedRef<NewCouponData> = computed(() =>({ ...newCoupon.value, username }))
-
-  
- newCoupon.value.username= memberStore.profile!.username
+newCoupon.value.username= memberStore.profile!.username
 //处理输入框placeholder（待优化）
 const placeholder1 = ref("请输入优惠券的类型")
 const placeholder2 = ref("请输入优惠券的折扣金额")
@@ -48,13 +41,13 @@ const addNewCouponData = async () => {
      uni.showToast({
        title: '获取成功'
      })
+    emit('add')
    }
    else{
      return uni.showToast({
         title: '获取失败'
       })
   }
-  emit('add')
   emit('close')
 }
 </script>
