@@ -38,3 +38,10 @@ export const deleteCouponById = (id:string) => {
     }
   )
 }
+
+export const queryCouponCodeId = (couponCodeId: string) => {
+  return http({
+    url: `/coupon/qrCode/${couponCodeId}`,
+    method:'GET'
+   })
+}

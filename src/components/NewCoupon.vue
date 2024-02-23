@@ -103,7 +103,6 @@ const addNewCouponData = async () => {
   font-weight: normal;
   color: #2443f5;
   line-height: 75rpx; //行高等于输入框高度，文本自动垂直居中
-
   .input-placeholder {
     color: #ab8eee;
   }

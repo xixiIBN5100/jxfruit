@@ -2,7 +2,7 @@
 import { CouponState } from '@/services/constants'
 import { CouponStateList } from '@/services/constants'
 import type { CouponItem, SubTypeItem, subTypeParams } from '@/types/coupon'
-import { getCoupon } from '@/services/coupon'
+import { getCoupon, queryCouponCodeId } from '@/services/coupon'
 import { onMounted, ref } from 'vue'
 import { useMemberStore } from '@/stores'
 import type { MemberItem } from '@/types/member'
@@ -15,11 +15,25 @@ const { safeAreaInsets } = uni.getSystemInfoSync()
 const props = defineProps<{
   priviledgeType: number
 }>()
+
+//券码输入框
+const couponCodeId = ref('')
+const placeholder = ref("请输入券码ID")
+
+//查询券码
+const onQueryCode = async() => {
+  const res = await queryCouponCodeId(couponCodeId.value)
+      console.log(res.data)
+}
+
+
+
+
 // 优惠券子类列表(前端自定义)
 const subTypes = ref<(SubTypeItem & { isFinish?: boolean })[]>([
-  { subTypeParams: { subType: 0, pageNum: 1, pageSize: 2, }, couponItems: [] },
-  { subTypeParams: { subType: 1, pageNum: 1, pageSize: 2, }, couponItems: [] },
-  { subTypeParams: { subType: 2, pageNum: 1, pageSize: 2, }, couponItems: [] }
+  { subTypeParams: { subType: 0, pageNum: 1, pageSize: 4, }, couponItems: [] },
+  { subTypeParams: { subType: 1, pageNum: 1, pageSize: 4, }, couponItems: [] },
+  { subTypeParams: { subType: 2, pageNum: 1, pageSize: 4, }, couponItems: [] }
 ])
 
 // 是否加载中标记，用于防止滚动触底触发多次请求
@@ -92,13 +106,13 @@ const onRefresherrefresh = async () => {
   isTriggered.value = true
   // 重置数据
   const currSubType = subTypes.value[activeIndex.value]
-  currSubType.subTypeParams.pageNum=1
-  currSubType.couponItems=[]
+  currSubType.subTypeParams.pageNum = 1
+  currSubType.couponItems = []
   currSubType.isFinish = false
-  if(isLoading.value)return
+  if (isLoading.value) return
   // 加载数据
-  isLoading.value=true
-  const res=await getCoupon(currSubType.subTypeParams)
+  isLoading.value = true
+  const res = await getCoupon(currSubType.subTypeParams)
   isLoading.value = false
   //分页处理
   if (currSubType.subTypeParams.pageNum! < res.data.pages) {
@@ -122,11 +136,11 @@ const onScrolltolower = async () => {
     return uni.showToast({ icon: 'none', title: '没有更多数据了~' })
   }
   if (isLoading.value) return
-  isLoading.value=true
+  isLoading.value = true
   const res = await getCoupon(
     currSubType.subTypeParams
   )
-  isLoading.value=false
+  isLoading.value = false
   //分页处理
   if (currSubType.subTypeParams.pageNum! < res.data.pages) {
     currSubType.subTypeParams.pageNum!++
@@ -174,25 +188,92 @@ const onScrolltolower = async () => {
               <view class="limit" v-if="coupon.effectivePrice != 0">满{{ coupon.effectivePrice }} 可用</view>
               <view class="effective-time">有效期至：{{ coupon.effectiveTime }}</view>
             </view>
-            <view class="use" @click="useCoupon(coupon)">{{ coupon.isUsed === 1 ? '已使用' :
+            <view class="use" @click="useCoupon(coupon)" >{{ coupon.isUsed === 1 ? '已使用' :
               (coupon.expired === 1 ? '已过期' : '使用') }}
             </view>
           </view>
         </view>
         <!-- 底部提示文字-->
-        <view class="loading-text" :style="{ paddingBottom: safeAreaInsets!.bottom + 100 +'px' }">
+        <view class="loading-text" :style="{ paddingBottom: safeAreaInsets!.bottom + 150 + 'px' }">
           {{ item.isFinish ? '没有更多数据~' : (isLoading ? '正在加载中...' : '滚动获取数据') }}
         </view>
       </scroll-view>
     </swiper-item>
   </swiper>
+  <view class="qrCode" v-if="props.priviledgeType == 2">
+    <view class="content">
+      <input class="custom" v-model="couponCodeId" :placeholder="placeholder" placeholder-class="input-placeholder"
+        @focus="placeholder = ''" @blur='placeholder = "请输入券码ID"' />
+      <button class="submit-btn" @click="onQueryCode" hover-class="button-hover">获取</button>
+
+    </view>
+
+
+
+
+
+  </view>
 </template>
 
 <style lang="scss">
+.qrCode {
+  height: 100%;
+  background-color: #ddf3fa;
+  padding: 0rpx 20rpx;
+
+  .content {
+    height: 100%;
+    padding-top: 60rpx;
+
+    .custom {
+      height: 75rpx;
+      min-height: 10rpx;
+      border: 2px ridge;
+      border-radius: 20rpx;
+      padding: 8rpx;
+      border-color: rgb(111, 108, 108);
+      font-weight: normal;
+      color: #2443f5;
+      background-color: #00fbff;
+      line-height: 75rpx; //行高等于输入框高度，文本自动垂直居中
+    }
+
+    .input-placeholder {
+      color: #ab8eee;
+    }
+
+    .submit-btn {
+      width: 170rpx;
+      height: 80rpx;
+      top: 50rpx;
+      line-height: normal;
+      text-align: center;
+      line-height: 80rpx;
+      border-radius: 60rpx;
+      color: rgb(48, 77, 204);
+      background-color: rgb(203, 253, 254);
+      align-items: center;
+      border: 1px solid;
+
+    }
+
+    .button-hover {
+      background-color: #092da1;
+      color: red;
+      opacity: 0.8;
+    }
+
+  }
+
+}
+
+
 .swiper {
   background-color: #f7f7f8;
   height: 100vh;
-  width: 750rpx;
+  width: 730rpx;
+  margin-left: 10rpx;
+  margin-right: 10rpx;
 }
 
 .tabs {
@@ -200,7 +281,7 @@ const onScrolltolower = async () => {
 
   justify-content: space-around;
   line-height: 60rpx;
-  margin: 0 10rpx;
+  margin: 0 0rpx;
   background-color: #fff;
   box-shadow: 0 4rpx 6rpx rgba(240, 240, 240, 0.6);
   position: relative;

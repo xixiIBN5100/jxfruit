@@ -9,9 +9,9 @@ import NewCoupon from '@/components/NewCoupon.vue'
 const { safeAreaInsets } = uni.getSystemInfoSync()
 // 优惠券子类列表(前端自定义)
 const subTypes = ref<(SubTypeItem & { isFinish?: boolean })[]>([
-  { subTypeParams: { subType: 0, pageNum: 1, pageSize: 2, }, couponItems: [] },
-  { subTypeParams: { subType: 1, pageNum: 1, pageSize: 2, }, couponItems: [] },
-  { subTypeParams: { subType: 2, pageNum: 1, pageSize: 2, }, couponItems: [] }
+  { subTypeParams: { subType: 0, pageNum: 1, pageSize: 4, }, couponItems: [] },
+  { subTypeParams: { subType: 1, pageNum: 1, pageSize: 4, }, couponItems: [] },
+  { subTypeParams: { subType: 2, pageNum: 1, pageSize: 4, }, couponItems: [] }
 ])
 
 //优惠券状态类型参数
@@ -87,7 +87,7 @@ const getCouponAdminData = async () => {
 const onDelete = (id: number) => {
   uni.showModal({
     content: '是否删除',
-    confirmColor: 'rgb(255,234,189)',
+    confirmColor: '#3a34db',
     success: async (res) => {
       if (res.confirm) {
         //后端删除单个优惠券
@@ -215,7 +215,7 @@ const onScrolltolower = async () => {
           (couponAdmin.expired === 1 ? '已过期' : '可使用') }}
         </view>
         <view class="delete">
-          <button @tap="onDelete(couponAdmin.id)" class="button delete-button">删除</button>
+          <button @tap="onDelete(couponAdmin.id)" class="button delete-button" hover-class="button-hover">删除</button>
         </view>
 
       </view>
@@ -227,12 +227,12 @@ const onScrolltolower = async () => {
       <view class="regulation">
         <view class="limit">新的优惠券~~</view>
       </view>
-      <view class="get" @click="getNewCouponData">
+      <view class="get" @click="getNewCouponData" hover-class="button-hover">
         获取
       </view>
     </view>
     <!-- 底部提示文字-->
-    <view class="loading-text" :style="{ paddingBottom: safeAreaInsets!.bottom + 100 + 'px' }">
+    <view class="loading-text" :style="{ paddingBottom: safeAreaInsets!.bottom + 150 +'px' }">
       {{ subTypes[couponStateIndex].isFinish ? '没有更多数据~' : (isLoading ? '正在加载中...' : '滚动获取数据') }}
     </view>
   </scroll-view>
@@ -338,6 +338,11 @@ const onScrolltolower = async () => {
     .delete-button {
       background-color: #cf4444;
     }
+     .button-hover {
+      background-color: #0735ca;
+      color: rgb(38, 0, 255);
+      opacity: 0.8;
+    }
   }
 
   .newcoupon {
@@ -383,13 +388,18 @@ const onScrolltolower = async () => {
       border: 1rpx solid #548ac8;
       color: #548ac8;
     }
+     .button-hover {
+      background-color: #0735ca;
+      color: red;
+      opacity: 0.8;
+    }
   }
 
   .loading-text {
     text-align: center;
     font-size: 28rpx;
     color: #666;
-    padding: 20rpx 0;
+    padding: 14rpx 0;
   }
 }
 </style>

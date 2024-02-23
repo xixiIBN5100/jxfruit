@@ -18,8 +18,9 @@ onLoad(() => {
   }
 })
 const priviledgeTabs = ref([
-  { priviledgeType: 0, title: '券' },
+  { priviledgeType: 0, title: '优惠券' },
   { priviledgeType: 1, title: '会员' },
+  { priviledgeType: 2, title: '核销券' }
 ])
 // 高亮下标
 const activeIndex = ref(priviledgeTabs.value.findIndex((v) => v.priviledgeType === Number(query.type)))
@@ -33,7 +34,7 @@ const activeIndex = ref(priviledgeTabs.value.findIndex((v) => v.priviledgeType =
         {{ item.title }}
       </text>
       <!-- 游标 -->
-      <view class="cursor" :style="{ left: activeIndex * 50 + 10 + '%' }"></view>
+      <view class="cursor" :style="{ left: activeIndex * 33 + 0 + '%' }"></view>
     </view>
     <!-- 滑动容器 -->
 
@@ -47,11 +48,10 @@ const activeIndex = ref(priviledgeTabs.value.findIndex((v) => v.priviledgeType =
   </view>
 </template>
 
-<style lang="scss">
+<style lang="scss" >
 // 深度选择器修改 uni-data-picker 组件样式
 .tabs {
   display: flex;
-
   justify-content: space-around;
   line-height: 60rpx;
   margin: 0 10rpx;
@@ -64,15 +64,15 @@ const activeIndex = ref(priviledgeTabs.value.findIndex((v) => v.priviledgeType =
     flex: 1;
     text-align: center;
     padding: 20rpx;
-    font-size: 28rpx;
+    font-size: 35rpx;
+    font-weight: bolder;
     color: #262626;
   }
 
   .cursor {
     position: absolute;
-    left: 0;
     bottom: 0;
-    width: 30%;
+    width: 33%;
     height: 6rpx;
     padding: 0 50rpx;
     background-color: rgb(255, 234, 189);
@@ -82,7 +82,7 @@ const activeIndex = ref(priviledgeTabs.value.findIndex((v) => v.priviledgeType =
 }
 
 .swiper {
-  background-color: #f7f7f8;
+  background-color: #9fddfa;
   height: 100vh;
   width: 750rpx;
 }
