@@ -5,11 +5,12 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="833da7bf-efbd-4934-a02f-b4fb823f9512" name="更改" comment="">
-      <change afterPath="$PROJECT_DIR$/src/services/adminGoods.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/services/adminOrder.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pnpm-lock.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/pnpm-lock.yaml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/pagesAdmin/goodsDetails/goodsDetails.vue" beforeDir="false" afterPath="$PROJECT_DIR$/src/pagesAdmin/goodsDetails/goodsDetails.vue" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/pagesAdmin/goodsManage/goodsManage.vue" beforeDir="false" afterPath="$PROJECT_DIR$/src/pagesAdmin/goodsManage/goodsManage.vue" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/pagesAdmin/orderDetails/orderDetails.vue" beforeDir="false" afterPath="$PROJECT_DIR$/src/pagesAdmin/orderDetails/orderDetails.vue" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/pagesAdmin/orderManage/components/orderList.vue" beforeDir="false" afterPath="$PROJECT_DIR$/src/pagesAdmin/orderManage/components/adminList.vue" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/pagesAdmin/orderManage/orderManage.vue" beforeDir="false" afterPath="$PROJECT_DIR$/src/pagesAdmin/orderManage/orderManage.vue" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/types/order.d.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/types/order.d.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -29,6 +30,29 @@
   </component>
   <component name="GitToolBoxStore">
     <option name="projectConfigVersion" value="5" />
+    <option name="recentBranches">
+      <RecentBranches>
+        <option name="branchesForRepo">
+          <list>
+            <RecentBranchesForRepo>
+              <option name="branches">
+                <list>
+                  <RecentBranch>
+                    <option name="branchName" value="feat-order" />
+                    <option name="lastUsedInstant" value="1706856221" />
+                  </RecentBranch>
+                  <RecentBranch>
+                    <option name="branchName" value="master" />
+                    <option name="lastUsedInstant" value="1706856220" />
+                  </RecentBranch>
+                </list>
+              </option>
+              <option name="repositoryRootUrl" value="file://$PROJECT_DIR$" />
+            </RecentBranchesForRepo>
+          </list>
+        </option>
+      </RecentBranches>
+    </option>
   </component>
   <component name="MarkdownSettingsMigration">
     <option name="stateVersion" value="1" />
@@ -80,7 +104,12 @@
       <workItem from="1702553831712" duration="3180000" />
       <workItem from="1702604565002" duration="5929000" />
       <workItem from="1702627047272" duration="46000" />
-      <workItem from="1706511614085" duration="6551000" />
+      <workItem from="1706511614085" duration="6611000" />
+      <workItem from="1706607020799" duration="4521000" />
+      <workItem from="1706617689391" duration="741000" />
+      <workItem from="1706856131632" duration="10494000" />
+      <workItem from="1706878981273" duration="3710000" />
+      <workItem from="1708409379808" duration="2146000" />
     </task>
     <servers />
   </component>

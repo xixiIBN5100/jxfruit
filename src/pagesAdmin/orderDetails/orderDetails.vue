@@ -4,12 +4,12 @@ import {
   deleteMemberOrder,
   getMemberOrderById,
   getMemberOrderCancelById,
-  putMemberOrderReceiptById
+  putMemberOrderReceiptById,
 } from '@/services/order'
 import CommentBox from '../../components/CommentBox.vue'
 import { onLoad, onReady } from '@dcloudio/uni-app'
 import { ref } from 'vue'
-import { getPayWxPayMiniPay, wxPay} from '@/services/pay'
+import { getPayWxPayMiniPay, wxPay } from '@/services/pay'
 
 // 获取屏幕边界到安全区域距离
 const { safeAreaInsets } = uni.getSystemInfoSync()
@@ -100,11 +100,10 @@ const orderStatueText = ['待付款', '待发货', '待收货', '待评价', '�
 
 const emit = defineEmits(['showComment'])
 
-
 // 模拟发货
 const onRefund = async (id: number) => {
   uni.navigateTo({
-    url: `../refund/refund?orderId=${query.id}&id=${id}`
+    url: `../refund/refund?orderId=${query.id}&id=${id}`,
   })
   // if (isDev) {
   //   await getMemberOrderConsignmentByIdAPI(query.id)
@@ -150,9 +149,9 @@ const close = () => {
 }
 
 const onComment = (id: number) => {
-  console.log("评价", id)
+  console.log('评价', id)
   isShow.value = true
-  uni.setStorageSync("goodsId", id)
+  uni.setStorageSync('goodsId', id)
 }
 
 // 取消订单
@@ -170,7 +169,7 @@ const onOrderCancel = async () => {
 </script>
 
 <template>
-  <CommentBox @close="close" style="position: fixed;z-index: 10" v-if="isShow"></CommentBox>
+  <CommentBox @close="close" style="position: fixed; z-index: 10" v-if="isShow"></CommentBox>
   <scroll-view
     enable-back-to-top
     scroll-y
@@ -180,10 +179,10 @@ const onOrderCancel = async () => {
   >
     <template v-if="order">
       <!-- 订单状态 -->
-      <view class="overview" :style="{ paddingTop: safeAreaInsets?.top  + 'px' }">
-<!--          <view class="status icon-clock">{{orderStatueText[order.orderState]}}</view>-->
-<!--          &lt;!&ndash; 订单状态文字 &ndash;&gt;-->
-          <view class="status"> {{ orderStateList[order.orderState].text }} </view>
+      <view class="overview" :style="{ paddingTop: safeAreaInsets?.top + 'px' }">
+        <!--          <view class="status icon-clock">{{orderStatueText[order.orderState]}}</view>-->
+        <!--          &lt;!&ndash; 订单状态文字 &ndash;&gt;-->
+        <view class="status"> {{ orderStateList[order.orderState].text }} </view>
       </view>
       <!-- 配送状态 -->
       <view class="shipment">
@@ -196,7 +195,9 @@ const onOrderCancel = async () => {
         </view>
         <!-- 用户收货地址 -->
         <view class="locate">
-          <view class="user"> {{ order.address.receiverName }} {{ order.address.receiverPhone }} </view>
+          <view class="user">
+            {{ order.address.receiverName }} {{ order.address.receiverPhone }}
+          </view>
           <view class="address"> {{ order.address.campus }} {{ order.address.roomAddress }} </view>
         </view>
       </view>
@@ -246,10 +247,12 @@ const onOrderCancel = async () => {
         <view class="title">订单信息</view>
         <view class="row">
           <view class="item">
-            订单编号: {{ order.orderTradeNo }} <text class="copy" @tap="onCopy(order.orderTradeNo)">复制</text>
+            订单编号: {{ order.orderTradeNo }}
+            <text class="copy" @tap="onCopy(order.orderTradeNo)">复制</text>
           </view>
           <view class="item">
-            订单号: {{ order.orderId }} <text class="copy" @tap="onCopy(order.orderId)">复制</text>
+            订单号: {{ order.orderId }}
+            <text class="copy" @tap="onCopy(order.orderId)">复制</text>
           </view>
           <view class="item">下单时间: {{ order.submitTime }}</view>
         </view>
@@ -259,11 +262,9 @@ const onOrderCancel = async () => {
       <view class="toolbar-height" :style="{ paddingBottom: safeAreaInsets?.bottom + 'px' }"></view>
       <view class="toolbar" :style="{ paddingBottom: safeAreaInsets?.bottom + 'px' }">
         <!-- 待付款状态:展示支付按钮 -->
-        <view class="button primary" v-if="order.orderState!==6" > 退款 </view>
-        <view class="button delete"> 取消订单 </view>
-          <view class="button">
-            复制订单
-          </view>
+        <!-- <view class="button primary" v-if="order.orderState!==6" > 退款 </view>
+        <view class="button delete"> 删除订单 </view> -->
+        <view class="button"> 复制订单 </view>
       </view>
     </template>
     <template v-else>
@@ -271,23 +272,6 @@ const onOrderCancel = async () => {
       <PageSkeleton />
     </template>
   </scroll-view>
-  <!-- 取消订单弹窗 -->
-  <uni-popup ref="popup" type="bottom" background-color="#fff">
-    <view class="popup-root">
-      <view class="title">订单取消</view>
-      <view class="description">
-        <view class="tips">请选择取消订单的原因：</view>
-        <view class="cell" v-for="item in reasonList" :key="item" @tap="reason = item">
-          <text class="text">{{ item }}</text>
-          <text class="icon" :class="{ checked: item === reason }"></text>
-        </view>
-      </view>
-      <view class="footer">
-        <view class="button" @tap="popup?.close?.()">取消</view>
-        <view class="button primary" @tap="onOrderCancel">确认</view>
-      </view>
-    </view>
-  </uni-popup>
 </template>
 
 <style lang="scss">
@@ -352,7 +336,7 @@ page {
   line-height: 1;
   padding-bottom: 30rpx;
   color: #000;
-  background-color: rgb(255,234,189);
+  background-color: rgb(255, 234, 189);
   background-size: cover;
 
   .status {
@@ -393,7 +377,6 @@ page {
     border-radius: 68rpx;
     background-color: #fff;
   }
-
 }
 
 .shipment {
@@ -540,7 +523,6 @@ page {
       // flex-direction: row-reverse;
       // justify-content: flex-start;
 
-
       // .button {
       //   margin: 0 auto;
       //   width: 200rpx;
@@ -675,7 +657,7 @@ page {
   .primary {
     order: 1;
     color: #000;
-    background-color: rgb(255,234,189);
+    background-color: rgb(255, 234, 189);
   }
 }
 
@@ -717,7 +699,7 @@ page {
     .icon.checked::before {
       content: '\e6cc';
       font-size: 38rpx;
-      color: rgb(255,234,189);
+      color: rgb(255, 234, 189);
     }
   }
 
@@ -741,7 +723,7 @@ page {
 
     .primary {
       color: #fff;
-      background-color: rgb(255,234,189);
+      background-color: rgb(255, 234, 189);
       border: none;
     }
   }

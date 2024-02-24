@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import orderList from './components/OrderList.vue'
 import CommentBox from '../../components/CommentBox.vue'
 import { onLoad, onReady } from '@dcloudio/uni-app'
 import { useMemberStore } from '@/stores'
-import OrderList from '@/pagesAdmin/orderManage/components/orderList.vue'
+import AdminList from '@/pagesAdmin/orderManage/components/adminList.vue'
+import { deliverOrder } from '@/services/adminOrder'
+import { sendOrderSMS } from '../../services/adminOrder'
 
 const memberStore = useMemberStore()
 
@@ -12,6 +13,8 @@ const memberStore = useMemberStore()
 const query = defineProps<{
   type: string
 }>()
+const listDom = ref()
+const list = ref<any>({})
 const { safeAreaInsets } = uni.getSystemInfoSync()
 onLoad(() => {
   isShow.value = false
@@ -33,24 +36,63 @@ const orderTabs = ref([
   { orderState: 2, title: '待发货', isRender: false },
   { orderState: 3, title: '待收货', isRender: false },
   { orderState: 4, title: '待评价', isRender: false },
+  { orderState: 5, title: '待退款', isRender: false },
 ])
 
 // 高亮下标
-const activeIndex = ref(orderTabs.value.findIndex((v) => v.orderState === Number(query.type)))
+let activeIndex = ref(orderTabs.value.findIndex((v) => v.orderState === Number(query.type)))
 // 默认渲染容器
 orderTabs.value[activeIndex.value].isRender = true
+
+const onSelected = (d) => {
+  list.value = d
+}
+
+const deliverOrders = () => {
+  deliverOrder(list.value).then((res) => {
+    if (res.msg === 'success') {
+      uni.showToast({
+        title: '发货成功',
+        icon: 'success',
+      })
+    } else {
+      uni.showToast({
+        title: `发货失败(${res.msg})`,
+        icon: 'none',
+      })
+    }
+  })
+}
+const indexChange = (e) => {
+  activeIndex.value = e.detail.current
+  orderTabs.value.forEach((item, index) => {
+    item.isRender = index === e.detail.current
+  })
+  onChose.value = false
+}
+
+const sendSMS = () => {
+  console.log(list.value)
+  sendOrderSMS(list.value).then((res) => {
+    if (res.msg === 'success') {
+      uni.showToast({
+        title: '短信发送成功',
+        icon: 'success',
+      })
+    } else {
+      uni.showToast({
+        title: `短信发送失败(${res.msg})`,
+        icon: 'none',
+      })
+    }
+  })
+}
 </script>
 
 <template>
   <view class="viewport">
     <!-- <comment-box></comment-box> -->
     <CommentBox @close="close" style="position: fixed; z-index: 10" v-if="isShow"></CommentBox>
-    <!-- 搜索框 -->
-    <view class="search">
-      <view class="input">
-        <input placeholder="输入订单信息" />
-      </view>
-    </view>
     <!-- tabs -->
     <view class="tabs">
       <text
@@ -67,19 +109,19 @@ orderTabs.value[activeIndex.value].isRender = true
         {{ item.title }}
       </text>
       <!-- 游标 -->
-      <view class="cursor" :style="{ left: activeIndex * 20 + '%' }"></view>
+      <view class="cursor" :style="{ left: activeIndex * 16.66666 + '%' }"></view>
     </view>
     <!-- 滑动容器 -->
-    <swiper class="swiper" :current="activeIndex" @change="activeIndex = $event.detail.current">
+    <swiper class="swiper" :current="activeIndex" @change="indexChange">
       <!-- 滑动项 -->
       <swiper-item v-for="item in orderTabs" :key="item.title">
         <!-- 订单列表 -->
-
-        <order-list
+        <admin-list
           v-if="item.isRender"
           :order-state="item.orderState"
-          :onChose="onChose"
-          @showComment="showComment"
+          :on-chose="onChose"
+          @selectedItems="onSelected"
+          :ref="(el) => (listDom = el)"
         />
       </swiper-item>
     </swiper>
@@ -87,9 +129,16 @@ orderTabs.value[activeIndex.value].isRender = true
   <view class="toolbar-height" :style="{ paddingBottom: safeAreaInsets?.bottom + 'px' }"></view>
   <view class="toolbar" :style="{ paddingBottom: safeAreaInsets?.bottom + 'px' }">
     <!-- 待付款状态:展示支付按钮 -->
-    <view class="button">批量发货 </view>
-    <view class="button">批量发短信</view>
-    <view class="button primary" @click="onChose = !onChose"> 多选订单 </view>
+    <view class="button" @tap="deliverOrders" v-if="activeIndex === 2">批量发货 </view>
+    <view class="button" @tap="sendSMS" v-if="activeIndex === 3">发短信 </view>
+    <!-- <view class="button">批量发短信</view>-->
+    <view
+      class="button primary"
+      @click="onChose = !onChose"
+      v-if="activeIndex === 2 || activeIndex === 3"
+    >
+      多选订单
+    </view>
   </view>
 </template>
 
@@ -121,8 +170,8 @@ page {
   .item {
     flex: 1;
     text-align: center;
-    padding: 20rpx;
-    font-size: 28rpx;
+    padding: 25rpx;
+    font-size: 25rpx;
     color: #262626;
   }
 
@@ -130,7 +179,7 @@ page {
     position: absolute;
     left: 0;
     bottom: 0;
-    width: 20%;
+    width: 16.666%;
     height: 6rpx;
     padding: 0 50rpx;
     background-color: rgb(255, 234, 189);
@@ -138,9 +187,11 @@ page {
     transition: all 0.4s;
   }
 }
+
 .search {
   padding: 20rpx 30rpx;
   background-color: #fff;
+
   .input {
     display: flex;
     align-items: center;
@@ -153,6 +204,7 @@ page {
     background-color: #f3f4f4;
   }
 }
+
 // swiper
 .swiper {
   background-color: #f7f7f8;
