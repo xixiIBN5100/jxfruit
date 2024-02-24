@@ -1,0 +1,90 @@
+/* 热门推荐 */
+.hot {
+  display: flex;
+  flex-wrap: wrap;
+  min-height: 508rpx;
+  margin: 20rpx auto;
+  width: max-content;
+  border-radius: 10rpx;
+  
+  .top {
+    display: flex;
+    justify-content: space-between;
+    width: 700rpx;
+  }
+
+  .bottom {
+    display: flex;
+    justify-content: space-between;
+    width: 700rpx;
+  }
+
+  .top-item {
+    height: 250rpx;
+    width: 335rpx;
+    border-radius: 20rpx;
+    background-color: white;
+    margin-top: 60rpx;
+    text-align: center;
+    line-height: 250rpx;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+
+  .bottom-item {
+    margin-top: 35rpx;
+    width: 215rpx;
+    height: 160rpx;
+    border-radius: 20rpx;
+    background-color: white;
+    text-align: center;
+    line-height: 150rpx;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+
+    .text {
+      font-size: 30rpx;
+    }
+  }
+
+  .image {
+    margin: 0 auto;
+  }
+
+  .text {
+    font-weight: bold;
+    text-align: center;
+    height: 40rpx;
+    line-height: 50rpx;
+    font-size: 35rpx;
+    margin-bottom: 5%;
+    text-align: center;
+  }
+
+
+  .title {
+    display: flex;
+    align-items: center;
+    padding: 24rpx 0 0 0;
+    font-size: 30rpx;
+    margin: 0 auto;
+    
+    color: #262626;
+    position: relative;
+    .title-desc {
+      font-size: 24rpx;
+      color: #7f7f7f;
+      margin-left: 18rpx;
+    }
+  }
+
+  .cards {
+    flex: 1;
+    padding: 15rpx 20rpx;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+}
