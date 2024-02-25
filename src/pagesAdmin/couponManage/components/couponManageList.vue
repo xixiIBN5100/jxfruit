@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { CouponState } from '@/services/constants'
-import type { CouponItem, subTypeParams } from '@/types/coupon'
+import type { CouponItem, SubTypeParams } from '@/types/coupon'
 import { deleteCouponById, getCoupon, getCouponAdmin, getNewCoupon } from '@/services/coupon'
 import { onMounted, ref } from 'vue'
 import type { SubTypeItem } from '@/types/coupon'
@@ -54,7 +54,7 @@ onMounted(() => {
 })
 
 //初始化函数
-const onInitialize = async (QueryParams: subTypeParams) => {
+const onInitialize = async (QueryParams: SubTypeParams) => {
   isLoading.value = true
   const res = await getCouponAdmin(QueryParams)
   isLoading.value = false

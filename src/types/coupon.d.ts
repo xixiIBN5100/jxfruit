@@ -30,12 +30,23 @@ export type CouponResult = {
 
 /* 优惠券-子类 */
 export type SubTypeItem = {
-  subTypeParams:subTypeParams
+  subTypeParams:SubTypeParams
   couponItems: CouponItem[]
 }
 
-export type subTypeParams = {
+export type SubTypeParams = {
   subType?: number
   pageSize?: number
   pageNum?:number
+}
+
+export type CouponCode= {
+  couponCodeId: number
+  codeNo: string
+  userId: number
+  verified: number
+  scale: string
+  price: number
+  goodsName: string
+  description:string
 }

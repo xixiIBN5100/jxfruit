@@ -1,4 +1,5 @@
-import type { CouponResult, CouponItem, subTypeParams,NewCouponData} from "@/types/coupon"
+import type { CouponResult, CouponItem ,SubTypeParams,NewCouponData,CouponCode} from "@/types/coupon"
+import type { PageParams } from "@/types/global"
 import { http } from "@/utils/http"
 export const getDefaultCoupon = () => {
     return http<CouponItem> ({
@@ -8,14 +9,14 @@ export const getDefaultCoupon = () => {
 }
 
 
-export const getCoupon = (data:subTypeParams) => {
+export const getCoupon = (data:SubTypeParams) => {
     return http<CouponResult>({
         url: `/coupon/query/self?subType=${data.subType}&pageSize=${data.pageSize}&pageNum=${data.pageNum}`,
         method: 'GET',
     })
 }
 
-export const getCouponAdmin = (data:subTypeParams) => {
+export const getCouponAdmin = (data:SubTypeParams) => {
     return http<CouponResult> ({
         url: `/coupon/admin/query?subType=${data.subType}&pageSize=${data.pageSize}&pageNum=${data.pageNum}`,
         method: 'GET',
@@ -39,9 +40,10 @@ export const deleteCouponById = (id:string) => {
   )
 }
 
-export const queryCouponCodeId = (couponCodeId: string) => {
-  return http({
-    url: `/coupon/qrCode/${couponCodeId}`,
-    method:'GET'
+export const queryCouponCodeList = (data:PageParams) => {
+  return http<CouponCode[]>({
+    url:'/coupon/qrCode',
+    method: 'GET',
+    data
    })
 }

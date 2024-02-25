@@ -1,12 +1,14 @@
 <script setup lang="ts">
 import { CouponState } from '@/services/constants'
 import { CouponStateList } from '@/services/constants'
-import type { CouponItem, SubTypeItem, subTypeParams } from '@/types/coupon'
-import { getCoupon, queryCouponCodeId } from '@/services/coupon'
+import type { CouponCode, CouponItem, SubTypeItem, SubTypeParams } from '@/types/coupon'
+import { getCoupon, queryCouponCodeList } from '@/services/coupon'
 import { onMounted, ref } from 'vue'
 import { useMemberStore } from '@/stores'
 import type { MemberItem } from '@/types/member'
 import { getMemberInfo } from '@/services/member'
+import type { PageParams } from '@/types/global'
+import { onShow } from '@dcloudio/uni-app'
 // 获取屏幕边界到安全区域距离
 const { safeAreaInsets } = uni.getSystemInfoSync()
 
@@ -16,35 +18,83 @@ const props = defineProps<{
   priviledgeType: number
 }>()
 
-//券码输入框
-const couponCodeId = ref('')
-const placeholder = ref("请输入券码ID")
+//券码分页
+const couponCodeParams = ref<PageParams>({
+  pageNum: 1,
+  pageSize: 4
+})
 
-//查询券码
-const onQueryCode = async() => {
-  const res = await queryCouponCodeId(couponCodeId.value)
-      console.log(res.data)
+
+const couponCodeList = ref<CouponCode[]>([
+  {
+    couponCodeId: 1,
+    codeNo: "123123",
+    userId: 43,
+    verified: 0,
+    scale: "规格2",
+    price: 20.0,
+    goodsName: "购物券",
+    description: "满30减8"
+  },
+  {
+    couponCodeId: 2,
+    codeNo: "123123",
+    userId: 43,
+    verified: 0,
+    scale: "规格2",
+    price: 20.0,
+    goodsName: "购物券",
+    description: "满30减8"
+  },
+  {
+    couponCodeId: 3,
+    codeNo: "123123",
+    userId: 43,
+    verified: 0,
+    scale: "规格2",
+    price: 20.0,
+    goodsName: "购物券",
+    description: "满30减8"
+  }
+])
+//查询券码列表
+const onQueryCodeList = async () => {
+  const res = await queryCouponCodeList(couponCodeParams.value)
+  couponCodeList.value.push(...res.data)
 }
 
-
-
-
+//跳转到查询券码页面，并携带页面参数couponCodeId
+const onQueryCode = (id: number) => {
+  uni.navigateTo({
+    url: `/pagesMember/couponCode/couponCode?couponCodeId=${id}`
+  })
+}
+//再来一单
+const onNavigate = () => {
+  uni.switchTab({ url: '/pages/category/category' })
+}
+/*
+onShow(()=> {
+  onQueryCodeList()
+})
+核销后返回时重新获取数据?
+*/
 // 优惠券子类列表(前端自定义)
 const subTypes = ref<(SubTypeItem & { isFinish?: boolean })[]>([
-  { subTypeParams: { subType: 0, pageNum: 1, pageSize: 4, }, couponItems: [] },
-  { subTypeParams: { subType: 1, pageNum: 1, pageSize: 4, }, couponItems: [] },
-  { subTypeParams: { subType: 2, pageNum: 1, pageSize: 4, }, couponItems: [] }
+  { subTypeParams: { subType: 0, pageNum: 1, pageSize: 6, }, couponItems: [] },
+  { subTypeParams: { subType: 1, pageNum: 1, pageSize: 6, }, couponItems: [] },
+  { subTypeParams: { subType: 2, pageNum: 1, pageSize: 6, }, couponItems: [] }
 ])
 
 // 是否加载中标记，用于防止滚动触底触发多次请求
 const isLoading = ref(false)
 //初始化函数
-const onInitialize = async (QueryParams: subTypeParams) => {
+const onInitialize = async (QueryParams: SubTypeParams) => {
   isLoading.value = true
   const res = await getCoupon(QueryParams)
   isLoading.value = false
   //引用当前子类
-  const currSubType = subTypes.value[index.value]
+  const currSubType = subTypes.value[initializeIndex.value]
   currSubType.couponItems = res.data.records
   //分页处理
   if (currSubType.subTypeParams.pageNum! < res.data.pages) {
@@ -54,15 +104,15 @@ const onInitialize = async (QueryParams: subTypeParams) => {
     //动态添加isFinish属性并赋值
     currSubType.isFinish = true
   }
-  index.value++
+  initializeIndex.value++
 }
-const index = ref(0)
+const initializeIndex = ref(0)
 //获取优惠券信息
 const getMemberCouponData = async () => {
   //初次获取数据并做相应处理
-  await onInitialize(subTypes.value[index.value].subTypeParams)
-  await onInitialize(subTypes.value[index.value].subTypeParams)
-  await onInitialize(subTypes.value[index.value].subTypeParams)
+  await onInitialize(subTypes.value[initializeIndex.value].subTypeParams)
+  await onInitialize(subTypes.value[initializeIndex.value].subTypeParams)
+  await onInitialize(subTypes.value[initializeIndex.value].subTypeParams)
 }
 
 const member = ref<MemberItem>()
@@ -79,6 +129,7 @@ const getMemberData = async () => {
 onMounted(() => {
   getMemberCouponData()
   getMemberData()
+  onQueryCodeList()
 })
 
 const useCoupon = (priviledge: CouponItem) => {
@@ -151,8 +202,6 @@ const onScrolltolower = async () => {
   const newCouponItem = res.data.records
   currSubType.couponItems.push(...newCouponItem)
 }
-
-
 </script>
 
 <template>
@@ -168,50 +217,67 @@ const onScrolltolower = async () => {
       {{ item.text }}
     </text>
     <!-- 游标 -->
-    <view class="cursor" :style="{ left: activeIndex * 33 + 5 + '%' }"></view>
+    <view class="cursor" :style="{ left: activeIndex * 33 + 8 + '%' }"></view>
   </view>
-  <swiper class="swiper" :current="activeIndex" @change="activeIndex = $event.detail.current"
+  <view class="scroll" v-for="(item, index) in subTypes" :key="index" v-show="activeIndex == index"
     v-if="props.priviledgeType === 0">
-    <swiper-item v-for="(item, index) in subTypes" :key="index">
-      <scroll-view enable-back-to-top scroll-y class="coupons" refresher-enabled :refresher-triggered="isTriggered"
-        @refresherrefresh="onRefresherrefresh" @scrolltolower="onScrolltolower">
-
-        <view v-for="coupon in item.couponItems" :key="coupon.id">
-          <view class="card"
-            :class="[(coupon.isUsed === CouponState.YiShiYong || coupon.expired === CouponState.YiGuoQi) ? 'used' : '']">
-            <!-- 优惠券信息 -->
-            <view>
-              <view><text style="font-size: 40rpx">￥</text>{{ coupon.price }}</view>
-              <view>{{ coupon.type }}</view>
-            </view>
-            <view class="regulation">
-              <view class="limit" v-if="coupon.effectivePrice != 0">满{{ coupon.effectivePrice }} 可用</view>
-              <view class="effective-time">有效期至：{{ coupon.effectiveTime }}</view>
-            </view>
-            <view class="use" @click="useCoupon(coupon)" >{{ coupon.isUsed === 1 ? '已使用' :
-              (coupon.expired === 1 ? '已过期' : '使用') }}
-            </view>
+    <scroll-view enable-back-to-top scroll-y class="coupons" refresher-enabled :refresher-triggered="isTriggered"
+      @refresherrefresh="onRefresherrefresh" @scrolltolower="onScrolltolower" scroll-with-animation show-scrollbar>
+      <view v-for="coupon in item.couponItems" :key="coupon.id">
+        <view class="card"
+          :class="[(coupon.isUsed === CouponState.YiShiYong || coupon.expired === CouponState.YiGuoQi) ? 'used' : '']">
+          <!-- 优惠券信息-->
+          <view>
+            <view><text style="font-size: 40rpx">￥</text>{{ coupon.price }}</view>
+            <view>{{ coupon.type }}</view>
+          </view>
+          <view class="regulation">
+            <view class="limit" v-if="coupon.effectivePrice != 0">满{{ coupon.effectivePrice }} 可用</view>
+            <view class="effective-time">有效期至：{{ coupon.effectiveTime }}</view>
+          </view>
+          <view class="use" @click="useCoupon(coupon)">{{ coupon.isUsed === 1 ? '已使用' :
+            (coupon.expired === 1 ? '已过期' : '使用') }}
           </view>
         </view>
-        <!-- 底部提示文字-->
-        <view class="loading-text" :style="{ paddingBottom: safeAreaInsets!.bottom + 150 + 'px' }">
-          {{ item.isFinish ? '没有更多数据~' : (isLoading ? '正在加载中...' : '滚动获取数据') }}
-        </view>
-      </scroll-view>
-    </swiper-item>
-  </swiper>
+      </view>
+      <!-- 底部提示文字-->
+      <view class="loading-text" :style="{ paddingBottom: safeAreaInsets!.bottom + 150 + 'px' }">
+        {{ item.isFinish ? '没有更多数据~' : (isLoading ? '正在加载中...' : '滚动获取数据') }}
+      </view>
+    </scroll-view>
+  </view>
   <view class="qrCode" v-if="props.priviledgeType == 2">
-    <view class="content">
-      <input class="custom" v-model="couponCodeId" :placeholder="placeholder" placeholder-class="input-placeholder"
-        @focus="placeholder = ''" @blur='placeholder = "请输入券码ID"' />
-      <button class="submit-btn" @click="onQueryCode" hover-class="button-hover">获取</button>
+    <scroll-view enable-back-to-top scroll-y class="couponCodes">
+      <view v-for="couponCode in couponCodeList" :key="couponCode.couponCodeId">
+        <view class="couponCode" :class="[(couponCode.verified == 1 ? 'used' : '')]">
+          <view class="area1">
+            <view class="logo">
+              <image></image>
+              <text>践行鲜果{{ couponCode.goodsName }}</text>
+            </view>
+            <view class="use">
+              <text>{{ couponCode.verified ? '已核销' : '待消费' }}</text>
+            </view>
+          </view>
+          <view class="divider"></view>
+          <view class="area2">
+            <image mode="aspectFit" src="@/static/images/jx_logo.png"></image>
+            <view class="textarea">
+              <text>规格:{{ couponCode.scale }}</text>
+              <text>实付:¥{{ couponCode.price }}</text>
+              <text>优惠信息：{{ couponCode.description }}</text>
+            </view>
+          </view>
+          <view class="buttonarea">
+            <button class="submit-btn" @click="onQueryCode(couponCode.couponCodeId)"
+              hover-class="button-hover">查看券码</button>
+            <button class="more-btn" @click="onNavigate" hover-class="button-hover">再来一单</button>
+          </view>
+        </view>
+      </view>
 
-    </view>
 
-
-
-
-
+    </scroll-view>
   </view>
 </template>
 
@@ -219,61 +285,143 @@ const onScrolltolower = async () => {
 .qrCode {
   height: 100%;
   background-color: #ddf3fa;
-  padding: 0rpx 20rpx;
+  width: 750rpx;
 
-  .content {
-    height: 100%;
-    padding-top: 60rpx;
+  .couponCodes {
+    height: 100vh;
+    width: 100%;
 
-    .custom {
-      height: 75rpx;
-      min-height: 10rpx;
-      border: 2px ridge;
-      border-radius: 20rpx;
-      padding: 8rpx;
-      border-color: rgb(111, 108, 108);
-      font-weight: normal;
-      color: #2443f5;
-      background-color: #00fbff;
-      line-height: 75rpx; //行高等于输入框高度，文本自动垂直居中
+    //text-align:center;
+    .couponCode {
+      background-color: rgba(118, 254, 236, 0.8);
+      min-height: 300rpx;
+      padding: 20rpx 60rpx 10rpx;
+      margin: 30rpx 30rpx 30rpx;
+      box-sizing: border-box;
+      border-radius: 30rpx;
+      border: 2px solid rgb(73, 93, 244, 0.8);
+      display: flex;
+      flex-direction: column;
+
+      .area1 {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+
+        .logo {
+          display: flex;
+          width: 200rpx;
+          white-space: nowrap;
+          margin: 10rpx 0rpx;
+
+          text {
+            font-weight: bolder;
+            font-size: 20px;
+          }
+
+        }
+
+        .use {
+          text {
+            font-size: 30rpx;
+          }
+        }
+      }
+
+      .divider {
+        height: 1px;
+        background-color: #a4a0a0;
+        margin: 13px -20px;
+
+      }
+
+      .area2 {
+        display: flex;
+        height: 300rpx;
+        width: 100%;
+        position: relative;
+
+        image {
+          width: 450rpx;
+          height: 450rpx;
+          position: absolute;
+          top: -80rpx;
+          left: -140rpx;
+
+        }
+
+        .textarea {
+          display: flex;
+          flex-direction: column;
+          margin: 20rpx 20rpx 0rpx 240rpx;
+          height: 460rpx;
+          flex: 1;
+          font-size: 18px;
+          line-height: 50px;
+          color: #474444;
+        }
+      }
+
+      .buttonarea {
+        display: flex;
+        height: 200rpx;
+        width: 500rpx;
+        margin-top: -20rpx;
+        margin-left: 130rpx;
+        justify-content: space-evenly;
+        align-items: center;
+
+        .submit-btn {
+          width: 200rpx;
+          height: 80rpx;
+          text-align: center;
+          line-height: 80rpx;
+          border-radius: 60rpx;
+          color: rgb(48, 77, 204);
+          background-color: rgb(203, 253, 254);
+          border: 1px solid;
+          margin-right: -10rpx;
+
+        }
+
+        .button-hover {
+          background-color: #092da1;
+          color: red;
+          opacity: 0.8;
+        }
+
+        .more-btn {
+          width: 200rpx;
+          height: 80rpx;
+          text-align: center;
+          line-height: 80rpx;
+          border-radius: 60rpx;
+          color: rgb(48, 77, 204);
+          background-color: rgb(203, 253, 254);
+          border: 1px solid;
+          margin-right: 40rpx;
+
+        }
+
+        .button-hover {
+          background-color: #092da1;
+          color: red;
+          opacity: 0.8;
+        }
+      }
+
     }
 
-    .input-placeholder {
-      color: #ab8eee;
-    }
-
-    .submit-btn {
-      width: 170rpx;
-      height: 80rpx;
-      top: 50rpx;
-      line-height: normal;
-      text-align: center;
-      line-height: 80rpx;
-      border-radius: 60rpx;
-      color: rgb(48, 77, 204);
-      background-color: rgb(203, 253, 254);
-      align-items: center;
-      border: 1px solid;
-
-    }
-
-    .button-hover {
-      background-color: #092da1;
-      color: red;
-      opacity: 0.8;
-    }
 
   }
 
 }
 
-
-.swiper {
-  background-color: #f7f7f8;
+.scroll {
+  background-color: #9fddfa;
   height: 100vh;
-  width: 730rpx;
-  margin-left: 10rpx;
-  margin-right: 10rpx;
+  width: 750rpx;
+
 }
 
 .tabs {
@@ -299,12 +447,12 @@ const onScrolltolower = async () => {
     position: absolute;
     left: 0;
     bottom: 0;
-    width: 25%;
+    width: 18%;
     height: 6rpx;
     padding: 0 50rpx;
     background-color: rgb(41, 205, 131);
     /* 过渡效果 */
-    transition: all 0.4s;
+    transition: all 0.25s;
   }
 }
 
@@ -373,7 +521,7 @@ const onScrolltolower = async () => {
     text-align: center;
     font-size: 28rpx;
     color: #666;
-    padding: 20rpx 0;
+    padding: 14rpx 0;
   }
 }
 
@@ -402,5 +550,4 @@ const onScrolltolower = async () => {
     border-radius: 20rpx;
     background-color: white;
   }
-}
-</style>
+}</style>

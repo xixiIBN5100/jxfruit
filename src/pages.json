@@ -171,6 +171,12 @@
             "style": {
               "navigationBarTitleText": "优惠券详情管理页面"
             }
+          },
+          {
+            "path": "qrCodeVerify/qrCodeVerify",
+            "style": {
+              "navigationBarTitleText": "购物券管理页面"
+            }
           }
 			]
 		},
@@ -222,7 +228,13 @@
 					"style": {
 						"navigationBarTitleText": "会员中心"
 					}
-				}
+				},
+        {
+          "path": "couponCode/couponCode",
+          "style": {
+            "navigationBarTitleText": "券码页面"
+          }
+        }
 			]
 		},
 		{

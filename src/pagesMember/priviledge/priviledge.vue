@@ -20,7 +20,7 @@ onLoad(() => {
 const priviledgeTabs = ref([
   { priviledgeType: 0, title: '优惠券' },
   { priviledgeType: 1, title: '会员' },
-  { priviledgeType: 2, title: '核销券' }
+  { priviledgeType: 2, title: '购物券' }
 ])
 // 高亮下标
 const activeIndex = ref(priviledgeTabs.value.findIndex((v) => v.priviledgeType === Number(query.type)))
@@ -77,7 +77,7 @@ const activeIndex = ref(priviledgeTabs.value.findIndex((v) => v.priviledgeType =
     padding: 0 50rpx;
     background-color: rgb(255, 234, 189);
     /* 过渡效果 */
-    transition: all 0.4s;
+    transition: all 0.3s;
   }
 }
 

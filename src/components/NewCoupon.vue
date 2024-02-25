@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref, computed,type ComputedRef } from 'vue'
+import { onMounted, ref } from 'vue'
 import type { CouponItem,  NewCouponData } from '@/types/coupon';
 import { useMemberStore } from '@/stores';
 import { getNewCoupon } from '@/services/coupon';
