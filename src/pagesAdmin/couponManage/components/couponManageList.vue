@@ -31,7 +31,7 @@ const Add = async () => {
   if (currSubType.isFinish) {
     //还原到上一页满数据的状态
     currSubType.couponItems = [...couponRecordList.value]
-    currSubType.subTypeParams.pageNum=couponRecordPage.value
+    currSubType.subTypeParams.pageNum = couponRecordPage.value
     //重新获取数据,并做分页处理
     currSubType.isFinish = false
     const res = await getCouponAdmin(currSubType.subTypeParams)
@@ -40,9 +40,9 @@ const Add = async () => {
       currSubType.subTypeParams.pageNum!++
     }
     else {
-      currSubType.isFinish=true
+      currSubType.isFinish = true
     }
-    const newCouponItem=res.data.records
+    const newCouponItem = res.data.records
     currSubType.couponItems.push(...newCouponItem)
   }
   else return
@@ -101,7 +101,7 @@ const onDelete = (id: number) => {
         //isLoading.value=true
         const res = await getCouponAdmin(currSubType.subTypeParams)
         //isLoading.value=false
-         //备份
+        //备份
         couponRecordList.value = [...currSubType.couponItems]
         couponRecordPage.value = currSubType.subTypeParams.pageNum!
         //分页处理
@@ -149,7 +149,7 @@ const onRefresherrefresh = async () => {
   isLoading.value = true
   const res = await getCouponAdmin(currSubType.subTypeParams)
   isLoading.value = false
-   //备份
+  //备份
   couponRecordList.value = [...currSubType.couponItems]
   couponRecordPage.value = currSubType.subTypeParams.pageNum!
   //分页处理
@@ -178,7 +178,7 @@ const onScrolltolower = async () => {
     currSubType.subTypeParams
   )
   isLoading.value = false
-   //备份
+  //备份
   couponRecordList.value = [...currSubType.couponItems]
   couponRecordPage.value = currSubType.subTypeParams.pageNum!
   //分页处理
@@ -232,7 +232,7 @@ const onScrolltolower = async () => {
       </view>
     </view>
     <!-- 底部提示文字-->
-    <view class="loading-text" :style="{ paddingBottom: safeAreaInsets!.bottom + 150 +'px' }">
+    <view class="loading-text" :style="{ paddingBottom: safeAreaInsets!.bottom + 150 + 'px' }">
       {{ subTypes[couponStateIndex].isFinish ? '没有更多数据~' : (isLoading ? '正在加载中...' : '滚动获取数据') }}
     </view>
   </scroll-view>
@@ -308,12 +308,6 @@ const onScrolltolower = async () => {
     }
   }
 
-  //侧滑删除样式
-  .cart-swipe {
-    display: block;
-    margin: 20rpx 0;
-  }
-
   .delete {
     display: flex;
     align-items: center;
@@ -338,7 +332,8 @@ const onScrolltolower = async () => {
     .delete-button {
       background-color: #cf4444;
     }
-     .button-hover {
+
+    .button-hover {
       background-color: #0735ca;
       color: rgb(38, 0, 255);
       opacity: 0.8;
@@ -388,7 +383,8 @@ const onScrolltolower = async () => {
       border: 1rpx solid #548ac8;
       color: #548ac8;
     }
-     .button-hover {
+
+    .button-hover {
       background-color: #0735ca;
       color: red;
       opacity: 0.8;

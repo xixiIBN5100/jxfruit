@@ -13,7 +13,7 @@ const getDefaultCouponData = async () => {
   isLoading.value = true
   const res = await getDefaultCoupon()
   isLoading.value=false
-  //问题：如果返回一个空对象，数组加上去，则length>0,渲染出空券
+  //问题：如果返回一个空对象，数组加上去，则length>0,渲染出空券(已解决)
   if (Object.keys(res.data).length !== 0) {
     couponDefaultList.value.push(res.data)
   }

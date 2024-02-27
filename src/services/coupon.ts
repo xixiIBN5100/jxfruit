@@ -1,4 +1,4 @@
-import type { CouponResult, CouponItem ,SubTypeParams,NewCouponData,CouponCode} from "@/types/coupon"
+import type { CouponResult, CouponItem ,SubTypeParams,NewCouponData,CouponCode, QrCodeVerify} from "@/types/coupon"
 import type { PageParams } from "@/types/global"
 import { http } from "@/utils/http"
 export const getDefaultCoupon = () => {
@@ -40,10 +40,17 @@ export const deleteCouponById = (id:string) => {
   )
 }
 
-export const queryCouponCodeList = (data:PageParams) => {
+export const queryCouponCodeList = () => {
   return http<CouponCode[]>({
     url:'/coupon/qrCode',
     method: 'GET',
-    data
    })
+}
+
+export const qrCodeVerify = (data:QrCodeVerify) => {
+  return http({
+         url: '/coupon/qrCode/verify',
+         method: 'POST',
+         data
+       })
 }

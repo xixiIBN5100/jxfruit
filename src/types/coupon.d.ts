@@ -50,3 +50,7 @@ export type CouponCode= {
   goodsName: string
   description:string
 }
+
+export type QrCodeVerify = {
+  codeNo:string
+}

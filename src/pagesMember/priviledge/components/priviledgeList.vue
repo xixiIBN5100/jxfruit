@@ -59,7 +59,7 @@ const couponCodeList = ref<CouponCode[]>([
 ])
 //查询券码列表
 const onQueryCodeList = async () => {
-  const res = await queryCouponCodeList(couponCodeParams.value)
+  const res = await queryCouponCodeList()
   couponCodeList.value.push(...res.data)
 }
 
@@ -73,12 +73,13 @@ const onQueryCode = (id: number) => {
 const onNavigate = () => {
   uni.switchTab({ url: '/pages/category/category' })
 }
-/*
+
+//核销后返回页面时重新获取数据
 onShow(()=> {
   onQueryCodeList()
 })
-核销后返回时重新获取数据?
-*/
+
+
 // 优惠券子类列表(前端自定义)
 const subTypes = ref<(SubTypeItem & { isFinish?: boolean })[]>([
   { subTypeParams: { subType: 0, pageNum: 1, pageSize: 6, }, couponItems: [] },
@@ -263,9 +264,9 @@ const onScrolltolower = async () => {
           <view class="area2">
             <image mode="aspectFit" src="@/static/images/jx_logo.png"></image>
             <view class="textarea">
-              <text>规格:{{ couponCode.scale }}</text>
-              <text>实付:¥{{ couponCode.price }}</text>
-              <text>优惠信息：{{ couponCode.description }}</text>
+              <text>规格: {{ couponCode.scale }}</text>
+              <text>实付: ¥{{ couponCode.price }}</text>
+              <text>优惠: {{ couponCode.description }}</text>
             </view>
           </view>
           <view class="buttonarea">
@@ -372,7 +373,7 @@ const onScrolltolower = async () => {
         align-items: center;
 
         .submit-btn {
-          width: 200rpx;
+          width: 230rpx;
           height: 80rpx;
           text-align: center;
           line-height: 80rpx;
@@ -380,8 +381,7 @@ const onScrolltolower = async () => {
           color: rgb(48, 77, 204);
           background-color: rgb(203, 253, 254);
           border: 1px solid;
-          margin-right: -10rpx;
-
+          margin-right: 30rpx;
         }
 
         .button-hover {
@@ -391,7 +391,7 @@ const onScrolltolower = async () => {
         }
 
         .more-btn {
-          width: 200rpx;
+          width: 230rpx;
           height: 80rpx;
           text-align: center;
           line-height: 80rpx;
@@ -550,4 +550,6 @@ const onScrolltolower = async () => {
     border-radius: 20rpx;
     background-color: white;
   }
-}</style>
+}
+
+</style>
