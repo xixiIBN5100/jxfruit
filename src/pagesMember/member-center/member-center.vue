@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import profile from '@/components/profile.vue'
+//import profile from '@/components/profile.vue'
 
 import type { MemberItem } from '@/types/member'
 import { getMemberInfo } from '@/services/member'
