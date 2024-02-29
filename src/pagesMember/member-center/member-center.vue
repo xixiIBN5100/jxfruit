@@ -1,21 +1,47 @@
-<script setup lang="ts">
-import profile from '@/components/profile.vue'
+<script setup lang="ts" >
+import type {MemberItem} from '@/types/member'
+import {computed, onMounted, ref, watch} from 'vue'
+import {useMemberStore} from '@/stores'
+import {getMemberInfo} from "@/services/member";
 
-import type { MemberItem } from '@/types/member'
-import { getMemberInfo } from '@/services/member'
-import { Static, onMounted, ref } from 'vue'
-import { useMemberStore } from '@/stores'
-import jx_logo from '@/static/images/jx_logo.png'
 const newuseMemberStore = useMemberStore()
 const memberInfo = getMemberInfo()
+const level = ref();
+const memberInfomation = ref()
 const couponData = {
   isFlipped: false,
 }
+const variable = ref(); // 初始化变量
+memberInfo.then(result => {
+  memberInfomation.value = result.data.membership;
+  console.log(memberInfomation.value);
+  level.value = memberInfomation.value.name;
+  variable.value = memberInfomation.value.vipLevel;
+}).catch(error => {
+  // 处理错误
+  console.error(error);
+});
+// 计算属性，根据变量的值返回相应的背景颜色
+const cardColor = computed(() => {
+  switch (variable.value) {
+    case 0:
+      return '#c2b2a4';
+    case 1:
+      return '#f8c9a0';
+    case 2:
+      return '#eca263';
+    case 3:
+      return '#d97f32';
+    case 4:
+      return '#b95b09';
+  }
+});
 
-const memberTypes = [
+
+const memberTypes  = [
   {
     type: 'a1',
-    text: '会员免运费',
+    text: '生日礼',
     imgUrl: 'https://image.familystudy.cn/image/jxfruit/会员免运费1.webp',
   },
   {
@@ -30,72 +56,25 @@ const memberTypes = [
   },
   {
     type: 'a4',
-    text: '抽优惠券',
+    text: '尊享折扣',
     imgUrl: 'https://image.familystudy.cn/image/jxfruit/抽优惠券.webp',
   },
 ]
-// 获取目标元素的位置和屏幕可见区域高度
-const scrollToElement = (id: string) => {
-  uni.pageScrollTo({
-    selector: '#' + id, // 指定要滚动到的元素的选择器（此处为id选择器）
-    duration: 500, // 滚动动画的时长，单位为毫秒
-  })
-}
 </script>
 <template>
   <view class="box">
-    <swiper class="membercontainer">
+    <div class="membercontainer">
       <swiper-item>
-        <view class="card">
-          <text class="member">白银会员</text>
+        <view class="card" :style="{ backgroundColor: cardColor }">
+          <text class="member">{{level}}</text>
           <view style="width: 300rpx; margin-left: 90rpx; margin-top: 40rpx">
-            <text style="font-size: 20rpx; margin-top: 10rpx">30目前距离升级还需要70成长值 </text>
+            <text style="font-size: 20rpx; margin-top: 10rpx">30目前距离升级还需要消费{{ }} </text>
             <progress :percent="30" :active="true" :border-radius="3" :stroke-width="3"></progress>
             <img src="../../static/images/jx_logo.png" class="image" />
           </view>
         </view>
       </swiper-item>
-      <swiper-item>
-        <view class="card">
-          <text class="member">黄金会员</text>
-          <view style="width: 300rpx; margin-left: 90rpx; margin-top: 40rpx">
-            <text style="font-size: 20rpx; margin-top: 10rpx">30目前距离升级还需要70成长值 </text>
-            <progress :percent="30" :active="true" :border-radius="3" :stroke-width="3"></progress>
-            <img src="../../static/images/jx_logo.png" class="image" />
-          </view>
-        </view>
-      </swiper-item>
-      <swiper-item>
-        <view class="card">
-          <text class="member">铂金会员</text>
-          <view style="width: 300rpx; margin-left: 90rpx; margin-top: 40rpx">
-            <text style="font-size: 20rpx; margin-top: 10rpx">30目前距离升级还需要70成长值 </text>
-            <progress :percent="30" :active="true" :border-radius="3" :stroke-width="3"></progress>
-            <img src="../../static/images/jx_logo.png" class="image" />
-          </view>
-        </view>
-      </swiper-item>
-      <swiper-item>
-        <view class="card">
-          <text class="member">钻石会员</text>
-          <view style="width: 300rpx; margin-left: 90rpx; margin-top: 40rpx">
-            <text style="font-size: 20rpx; margin-top: 10rpx">30目前距离升级还需要70成长值 </text>
-            <progress :percent="30" :active="true" :border-radius="3" :stroke-width="3"></progress>
-            <img src="../../static/images/jx_logo.png" class="image" />
-          </view>
-        </view>
-      </swiper-item>
-      <swiper-item>
-        <view class="card">
-          <text class="member">星耀会员</text>
-          <view style="width: 300rpx; margin-left: 90rpx; margin-top: 40rpx">
-            <text style="font-size: 20rpx; margin-top: 10rpx">30目前距离升级还需要70成长值 </text>
-            <progress :percent="30" :active="true" :border-radius="3" :stroke-width="3"></progress>
-            <img src="../../static/images/jx_logo.png" class="image" />
-          </view>
-        </view>
-      </swiper-item>
-    </swiper>
+    </div>
     <view class="section">
       <view
         v-for="item in memberTypes"
@@ -107,18 +86,17 @@ const scrollToElement = (id: string) => {
           :src="item.imgUrl"
           mode="aspectFit"
           style="margin-bottom: 10rpx"
-          @click="scrollToElement(item.type)"
         ></image>
         <view>{{ item.text }}</view>
       </view>
     </view>
     <view class="container">
       <view class="children1" id="a1">
-        <text class="title1">会员免运费</text>
+        <text class="title1">生日礼</text>
       </view>
-      <view class="children1" id="a2">
+      <view class="children2" id="a2">
         <text class="title1">优惠秒杀</text>
-        <swiper class="couponList">
+        <swiper class="itemList">
       <swiper-item class="swiper_buy">
         <view class="item"> </view>
         <view class="item"> </view>
@@ -147,7 +125,7 @@ const scrollToElement = (id: string) => {
         </swiper>
       </view>
       <view class="children1" id="a4">
-        <text class="title1">抽优惠券</text>
+        <text class="title1">尊享折扣</text>
       </view>
     </view>
   </view>
@@ -160,8 +138,8 @@ const scrollToElement = (id: string) => {
 }
 .item {
   width: 200rpx;
-  height: 150rpx;
-  background-color: rgb(255, 240, 228);
+  height: 200rpx;
+  background-color: #fff;
   margin: 10rpx;
   margin-top: -2rpx;
   border-radius: 15rpx;
@@ -171,7 +149,8 @@ const scrollToElement = (id: string) => {
   justify-content: space-between;
 }
 .itemList {
-  height: 200rpx;
+  height: 250rpx;
+  padding: 10px;
 }
 .couponList {
   padding: 10px; /* 调整内边距 */
@@ -188,7 +167,6 @@ const scrollToElement = (id: string) => {
 .card {
   width: 650rpx;
   height: 280rpx;
-  background-color: burlywood;
   border-radius: 50rpx;
   box-shadow: 0rpx 0rpx 5rpx #888888;
   margin: 20rpx auto 0;
@@ -210,7 +188,7 @@ const scrollToElement = (id: string) => {
   margin-top: 10rpx;
   display: flex;
   justify-content: space-between;
-  padding: 40rpx 20rpx 40rpx;
+  padding: 40rpx 50rpx 40rpx;
 
   .navigator,
   .contact {
@@ -249,6 +227,20 @@ const scrollToElement = (id: string) => {
   .children1 {
     width: 100%;
     height: 280rpx;
+    background-color: burlywood;
+    border-radius: 60rpx;
+    padding: 20rpx;
+    margin: auto;
+    margin-bottom: 30rpx;
+
+    .title1 {
+      margin-left: 15rpx;
+    }
+  }
+
+  .children2 {
+    width: 100%;
+    height: 320rpx;
     background-color: burlywood;
     border-radius: 60rpx;
     padding: 20rpx;
