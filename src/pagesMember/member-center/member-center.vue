@@ -34,6 +34,7 @@ const cardColor = computed(() => {
       return '#d97f32';
     case 4:
       return '#b95b09';
+
   }
 });
 
