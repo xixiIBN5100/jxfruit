@@ -11,68 +11,47 @@ const query = defineProps<{
 }>()
 
 onLoad(() => {
-    if (!memberStore.profile) {
+  if (!memberStore.profile) {
     uni.navigateTo({
       url: '/pages/login/login'
     })
   }
 })
-
 const priviledgeTabs = ref([
-  { priviledgeType: 0, title: '券', isRender: false },
-  { priviledgeType: 1, title: '会员', isRender: false },
-  // { priviledgeType: 2, title: '会员', isRender: false },
+  { priviledgeType: 0, title: '优惠券' },
+  { priviledgeType: 1, title: '会员' },
+  { priviledgeType: 2, title: '购物券' }
 ])
 // 高亮下标
 const activeIndex = ref(priviledgeTabs.value.findIndex((v) => v.priviledgeType === Number(query.type)))
 // 默认渲染容器
-priviledgeTabs.value[activeIndex.value].isRender = true
 </script>
 
 <template>
-    <view>
-        <view class="tabs">
-            <text
-                class="item"
-                v-for="(item, index) in priviledgeTabs"
-                :key="item.title"
-                @tap="
-                () => {
-                    activeIndex = index
-                    item.isRender = true
-                }
-                "
-            >
-                {{ item.title }}
-            </text>
-            <!-- 游标 -->
-            <view class="cursor" :style="{ left: activeIndex * 50 + 13 + '%' }"></view>
-        </view>
-
-       <!-- <view v-for="item in priviledgeTabs" :key="item.title"> 
-          <priviledgeList v-if="item.isRender" />
-        </view>   <view v-for="item in priviledgeTabs" :key="item.title"> 
-          <priviledgeList v-if="item.isRender" />
-        </view> -->
-         <!-- 滑动容器 -->
-      
-        <swiper class="swiper" :current="activeIndex" @change="activeIndex = $event.detail.current">
-          <!-- 滑动项 -->
-          <swiper-item v-for="item in priviledgeTabs" :key="item.title">
-            <!-- 订单列表 -->
-            <priviledgeList :priviledge-type="item.priviledgeType" v-if="item.isRender" />
-          </swiper-item>
-        </swiper>
+  <view>
+    <view class="tabs">
+      <text class="item" v-for="(item, index) in priviledgeTabs" :key="item.title" @tap="() => { activeIndex = index }">
+        {{ item.title }}
+      </text>
+      <!-- 游标 -->
+      <view class="cursor" :style="{ left: activeIndex * 33 + 0 + '%' }"></view>
     </view>
-    
- 
+    <!-- 滑动容器 -->
+
+    <swiper class="swiper" :current="activeIndex" @change="activeIndex = $event.detail.current">
+      <!-- 滑动项 -->
+      <swiper-item v-for="item in priviledgeTabs" :key="item.title">
+        <!-- 权益列表 -->
+        <priviledgeList :priviledge-type="item.priviledgeType" />
+      </swiper-item>
+    </swiper>
+  </view>
 </template>
 
-<style lang="scss">
+<style lang="scss" >
 // 深度选择器修改 uni-data-picker 组件样式
 .tabs {
   display: flex;
-  
   justify-content: space-around;
   line-height: 60rpx;
   margin: 0 10rpx;
@@ -85,25 +64,25 @@ priviledgeTabs.value[activeIndex.value].isRender = true
     flex: 1;
     text-align: center;
     padding: 20rpx;
-    font-size: 28rpx;
+    font-size: 35rpx;
+    font-weight: bolder;
     color: #262626;
   }
 
   .cursor {
     position: absolute;
-    left: 0;
     bottom: 0;
-    width: 20%;
+    width: 33%;
     height: 6rpx;
     padding: 0 50rpx;
-    background-color: rgb(255,234,189);
+    background-color: rgb(255, 234, 189);
     /* 过渡效果 */
-    transition: all 0.4s;
+    transition: all 0.3s;
   }
 }
 
 .swiper {
-  background-color: #f7f7f8;
+  background-color: #9fddfa;
   height: 100vh;
   width: 750rpx;
 }
