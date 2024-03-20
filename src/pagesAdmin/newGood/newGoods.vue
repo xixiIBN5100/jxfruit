@@ -12,13 +12,12 @@ import type { GoodsItem, GoodsResult, SkuItem, GoodsImageItem } from '@/types/go
 import type { AddressItem } from '@/types/address'
 import { onLoad } from '@dcloudio/uni-app'
 import { computed, ref, onMounted } from 'vue'
-import { updateGood, deleteById, setOnShelf, deletImage } from '@/services/adminGoods'
+import { updateGood, deleteById, setOnShelf } from '@/services/adminGoods'
 import { profile } from 'console'
 // import uni from '@dcloudio/vite-plugin-uni'
 // 获取屏幕边界到安全区域距离
 const { safeAreaInsets } = uni.getSystemInfoSync()
 import { useMemberStore } from '@/stores'
-import { title } from 'process'
 // 接收页面参数
 const query = defineProps<{
   id: string
@@ -126,10 +125,6 @@ const childComponentRef = ref(null)
 // SKU组件实例
 const skuPopupRef = ref<SkuPopupInstance>()
 
-const toComment = (id: string) => {
-  uni.navigateTo({ url: `/pagesOrder/comment/comment?goodsId=${id}` })
-}
-
 const saveChanges = () => {
   console.log(goods.value)
   const data = goods.value
@@ -183,69 +178,6 @@ const deleteGood = async () => {
     },
   })
 }
-
-const deletImageById = (id: number) => {
-  console.log(id)
-  uni.showModal({
-    title: '提示',
-    content: '确认删除该图片吗？',
-    success: function (res) {
-      if (res.confirm) {
-        deletImage(id).then((res) => {
-          if (res.msg === 'success') {
-            uni.showToast({
-              title: '删除成功!',
-              icon: 'success',
-              duration: 2000,
-            })
-            goods.value.images = goods.value.images.filter((item) => item.id !== id)
-          } else {
-            uni.showToast({
-              title: '删除失败!',
-              icon: 'none',
-              duration: 2000,
-            })
-          }
-        })
-      }
-    },
-  })
-}
-const addImage = () => {
-  uni.chooseImage({
-    count: 1,
-    sizeType: ['original', 'compressed'],
-    sourceType: ['album', 'camera'],
-    success: function (res) {
-      console.log(res)
-      const tempFilePaths = res.tempFilePaths
-      uni.uploadFile({
-        url: `/goods/admin/add/image/${goods.value.goodsInfo.id}`,
-        filePath: tempFilePaths[0],
-        name: 'file',
-        success: function (res) {
-          const data = JSON.parse(res.data)
-          console.log(data)
-          if (data.msg === 'success') {
-            uni.showToast({
-              title: '上传成功!',
-              icon: 'success',
-              duration: 2000,
-            })
-            const newUrl = data.data.imgUrls[0]
-            goods.value.images.push({ id: data.data.id, imgUrl: newUrl }) //TODO: 上传成功后，需要将图片添加到商品详情中但是返回的时候还没有ID
-          } else {
-            uni.showToast({
-              title: '上传失败!',
-              icon: 'none',
-              duration: 2000,
-            })
-          }
-        },
-      })
-    },
-  })
-}
 </script>
 
 <template>
@@ -255,16 +187,8 @@ const addImage = () => {
       <!-- 商品主图 -->
       <view class="preview">
         <swiper @change="onChange">
-          <swiper-item v-for="item in goods?.images">
-            <image
-              @longpress="deletImageById(item.id)"
-              @click="onTapImage"
-              class="image"
-              mode="aspectFill"
-              :src="item?.imgUrl"
-            />
-            <button>删除</button>
-            <!-- <image class="fruit-logo" src="../../static/images/logo.jpg"></image> -->
+          <!-- <swiper-item v-for="item in goods?.images"> -->
+            <image class="fruit-logo" src="../../static/images/logo.jpg"></image>
           </swiper-item>
         </swiper>
         <view class="indicator">
@@ -278,7 +202,7 @@ const addImage = () => {
       <view class="meta">
         <view class="price">
           <text class="symbol">¥</text>
-          <input :type="number" v-model.number="goods.goodsInfo.price" />
+          <input :type="number" v-model.number="goods.goodsInfo.price" placeholder="0.0" />
           <view class="share-btn" @click="openPopup('share')"></view>
         </view>
         <input class="name ellipsis" v-model="goods.goodsInfo.goodsName" />
@@ -289,9 +213,6 @@ const addImage = () => {
 
     <!-- 商品详情 -->
     <view class="detail panel">
-      <view class="title">
-        <button type="primary" @click="addImage">添加图片</button>
-      </view>
       <view class="comment">
         <template v-for="(item, index) in goods?.comments.slice(0, 3)" :key="index">
           <view>
@@ -309,11 +230,7 @@ const addImage = () => {
 
   <view v-if="goods" class="toolbar" :style="{ paddingBottom: safeAreaInsets?.bottom + 'px' }">
     <view class="buttons">
-      <view class="payment" @tap="deleteGood()"> 删除 </view>
-      <view class="payment" @tap="saveChanges()"> 保存 </view>
-      <view class="payment" @tap="changeShelf()">
-        {{ onShelf ? '下架' : '上架' }}
-      </view>
+      <view class="payment" @tap="saveChanges()"> 创建 </view>
     </view>
   </view>
 </template>
@@ -335,13 +252,23 @@ page {
   background-color: #fff;
   .title {
     display: flex;
-    justify-content: center;
+    justify-content: space-between;
     align-items: center;
     height: 90rpx;
-  }
-  .button {
-    padding-top: 20px;
-    padding-left: -10px;
+    line-height: 1;
+    padding: 30rpx 60rpx 30rpx 6rpx;
+    position: relative;
+    text {
+      padding-left: 10rpx;
+      font-size: 28rpx;
+      color: #333;
+      font-weight: 600;
+      border-left: 4rpx solid rgb(255, 234, 189);
+    }
+    navigator {
+      font-size: 24rpx;
+      color: #666;
+    }
   }
 }
 

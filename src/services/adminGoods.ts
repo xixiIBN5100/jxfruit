@@ -1,4 +1,4 @@
-import {http} from "@/utils/http";
+import { http } from '@/utils/http'
 
 export const setOnShelf = async (data: any) => {
   return await http({
@@ -22,5 +22,12 @@ export const updateGood = (data: any) => {
     url: '/goods/admin/update',
     method: 'POST',
     data: data,
+  })
+}
+
+export const deletImage = (id: number) => {
+  return http({
+    url: `/goods/admin/delete/image/${id}`,
+    method: 'DELETE',
   })
 }
