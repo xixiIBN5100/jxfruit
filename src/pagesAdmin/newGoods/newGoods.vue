@@ -8,21 +8,31 @@ import { postMemberCart } from '@/services/cart'
 import { getGoodsById, getSkuInfo } from '@/services/goods'
 import { getAddress } from '@/services/address'
 import type { CartItem } from '@/types/cart'
-import type { GoodsItem, GoodsResult, SkuItem, GoodsImageItem } from '@/types/goods'
+import type { GoodsItem, GoodsResult, SkuItem, GoodsImageItem, newGood } from '@/types/goods'
 import type { AddressItem } from '@/types/address'
 import { onLoad } from '@dcloudio/uni-app'
 import { computed, ref, onMounted } from 'vue'
-import { updateGood, deleteById, setOnShelf } from '@/services/adminGoods'
+import { updateGood, deleteById, setOnShelf, deletImage } from '@/services/adminGoods'
 import { profile } from 'console'
 // import uni from '@dcloudio/vite-plugin-uni'
 // 获取屏幕边界到安全区域距离
 const { safeAreaInsets } = uni.getSystemInfoSync()
 import { useMemberStore } from '@/stores'
+import { title } from 'process'
 // 接收页面参数
 const query = defineProps<{
   id: string
   userId: string
 }>()
+
+const newGoods = ref<newGood>({
+  goodsName: '',
+  price: 0,
+  description: '',
+  category: '',
+  discount: '',
+  thumbNail: '',
+})
 
 const selectAddress = (address) => {
   console.log(address)
@@ -79,15 +89,6 @@ const onChange: UniHelper.SwiperOnChange = (ev) => {
   currentIndex.value = ev.detail.current
 }
 
-// 点击图片时
-const onTapImage = (url: string) => {
-  // 大图预览
-  uni.previewImage({
-    current: url,
-    urls: goods.value!.images.map((item) => item.imgUrl),
-  })
-}
-
 // uni-ui 弹出层组件 ref
 const popup = ref<{
   open: (type?: UniHelper.UniPopupType) => void
@@ -124,6 +125,10 @@ const openSkuPopup = (val: SkuMode) => {
 const childComponentRef = ref(null)
 // SKU组件实例
 const skuPopupRef = ref<SkuPopupInstance>()
+
+const toComment = (id: string) => {
+  uni.navigateTo({ url: `/pagesOrder/comment/comment?goodsId=${id}` })
+}
 
 const saveChanges = () => {
   console.log(goods.value)
@@ -178,6 +183,71 @@ const deleteGood = async () => {
     },
   })
 }
+
+const deletImageById = (id: number) => {
+  console.log(id)
+  uni.showModal({
+    title: '提示',
+    content: '确认删除该图片吗？',
+    success: function (res) {
+      if (res.confirm) {
+        deletImage(id).then((res) => {
+          if (res.msg === 'success') {
+            uni.showToast({
+              title: '删除成功!',
+              icon: 'success',
+              duration: 2000,
+            })
+            goods.value.images = goods.value.images.filter((item) => item.id !== id)
+          } else {
+            uni.showToast({
+              title: '删除失败!',
+              icon: 'none',
+              duration: 2000,
+            })
+          }
+        })
+      }
+    },
+  })
+}
+const addImage = () => {
+  uni.chooseImage({
+    count: 1,
+    sizeType: ['original', 'compressed'],
+    sourceType: ['album', 'camera'],
+    success: function (res) {
+      console.log(res)
+      const tempFilePaths = res.tempFilePaths
+      uni.uploadFile({
+        url: `/goods/admin/add/image/${goods.value.goodsInfo.id}`,
+        filePath: tempFilePaths[0],
+        name: 'file',
+        success: function (res) {
+          const data = JSON.parse(res.data)
+          console.log(data)
+          if (data.msg === 'success') {
+            uni.showToast({
+              title: '上传成功!',
+              icon: 'success',
+              duration: 2000,
+            })
+            console.log(data)
+            console.log(data.data.imgs)
+            goods.value.images.push(data.data.imgs[0])
+            console.log(goods.value.images)
+          } else {
+            uni.showToast({
+              title: '上传失败!',
+              icon: 'none',
+              duration: 2000,
+            })
+          }
+        },
+      })
+    },
+  })
+}
 </script>
 
 <template>
@@ -187,7 +257,7 @@ const deleteGood = async () => {
       <!-- 商品主图 -->
       <view class="preview">
         <swiper @change="onChange">
-          <!-- <swiper-item v-for="item in goods?.images"> -->
+          <swiper-item v-for="item in goods?.images">
             <image class="fruit-logo" src="../../static/images/logo.jpg"></image>
           </swiper-item>
         </swiper>
@@ -202,17 +272,25 @@ const deleteGood = async () => {
       <view class="meta">
         <view class="price">
           <text class="symbol">¥</text>
-          <input :type="number" v-model.number="goods.goodsInfo.price" placeholder="0.0" />
+          <input :type="number" required v-model.number="newGoods.price" />
           <view class="share-btn" @click="openPopup('share')"></view>
         </view>
-        <input class="name ellipsis" v-model="goods.goodsInfo.goodsName" />
-        <input class="desc" v-model="goods.goodsInfo.description" />
+        <input class="name ellipsis" required v-model="newGoods.goodsName" placeholder="商品名称" />
+        <input class="name ellipsis" required v-model="newGoods.category" placeholder="商品种类" />
+        <input class="name ellipsis" required v-model="newGoods.discount" placeholder="商品折扣" />
+        <input class="name ellipsis" v-model="newGoods.productRegion" placeholder="商品产地" />
+        <input class="name ellipsis" v-model="newGoods.productTime" placeholder="商品生产日期" />
+        <input class="desc" v-model="newGoods.description" placeholder="请在此输入商品介绍" />
+        <input class="desc" v-model="newGoods.notes" placeholder="请在此输入商品注意点" />
       </view>
       <!-- 操作面板 -->
     </view>
 
     <!-- 商品详情 -->
     <view class="detail panel">
+      <view class="title">
+        <button type="primary" @click="addImage">添加图片</button>
+      </view>
       <view class="comment">
         <template v-for="(item, index) in goods?.comments.slice(0, 3)" :key="index">
           <view>
@@ -230,7 +308,11 @@ const deleteGood = async () => {
 
   <view v-if="goods" class="toolbar" :style="{ paddingBottom: safeAreaInsets?.bottom + 'px' }">
     <view class="buttons">
-      <view class="payment" @tap="saveChanges()"> 创建 </view>
+      <view class="payment" @tap="deleteGood()"> 删除 </view>
+      <view class="payment" @tap="saveChanges()"> 保存 </view>
+      <view class="payment" @tap="changeShelf()">
+        {{ onShelf ? '下架' : '上架' }}
+      </view>
     </view>
   </view>
 </template>
@@ -252,23 +334,13 @@ page {
   background-color: #fff;
   .title {
     display: flex;
-    justify-content: space-between;
+    justify-content: center;
     align-items: center;
     height: 90rpx;
-    line-height: 1;
-    padding: 30rpx 60rpx 30rpx 6rpx;
-    position: relative;
-    text {
-      padding-left: 10rpx;
-      font-size: 28rpx;
-      color: #333;
-      font-weight: 600;
-      border-left: 4rpx solid rgb(255, 234, 189);
-    }
-    navigator {
-      font-size: 24rpx;
-      color: #666;
-    }
+  }
+  .button {
+    padding-top: 20px;
+    padding-left: -10px;
   }
 }
 

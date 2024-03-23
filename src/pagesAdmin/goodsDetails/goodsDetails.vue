@@ -232,8 +232,10 @@ const addImage = () => {
               icon: 'success',
               duration: 2000,
             })
-            const newUrl = data.data.imgUrls[0]
-            goods.value.images.push({ id: data.data.id, imgUrl: newUrl }) //TODO: 上传成功后，需要将图片添加到商品详情中但是返回的时候还没有ID
+            console.log(data)
+            console.log(data.data.imgs)
+            goods.value.images.push(data.data.imgs[0])
+            console.log(goods.value.images)
           } else {
             uni.showToast({
               title: '上传失败!',

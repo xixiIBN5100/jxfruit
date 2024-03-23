@@ -36,7 +36,7 @@ export type GoodsImageItem = {
 
 export type newGood = {
   goodsName: string
-  price: string
+  price: number
   discount: string
   productRegion?: string
   productTime?: string
