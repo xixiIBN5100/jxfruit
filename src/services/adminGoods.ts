@@ -1,3 +1,4 @@
+import type { newSku, SkuItem } from '@/types/goods'
 import { http } from '@/utils/http'
 
 export const setOnShelf = async (data: any) => {
@@ -29,5 +30,28 @@ export const deletImage = (id: number) => {
   return http({
     url: `/goods/admin/delete/image/${id}`,
     method: 'DELETE',
+  })
+}
+
+export const addScale = (id: number, data: newSku) => {
+  return http({
+    url: `/goods/admin/add/scale/${id}`,
+    method: 'POST',
+    data: data,
+  })
+}
+
+export const deleteScale = (id: number) => {
+  return http({
+    url: `/goods/admin/delete/scale/${id}`,
+    method: 'DELETE',
+  })
+}
+
+export const updateScale = (data: SkuItem) => {
+  return http({
+    url: '/goods/admin/update/scale',
+    method: 'POST',
+    data: data,
   })
 }

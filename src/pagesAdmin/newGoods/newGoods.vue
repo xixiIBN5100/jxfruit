@@ -28,44 +28,9 @@ const query = defineProps<{
 const newGoods = ref<newGood>({
   goodsName: '',
   price: 0,
+  discount: 1,
   description: '',
   category: '',
-  discount: '',
-  thumbNail: '',
-})
-
-const selectAddress = (address) => {
-  console.log(address)
-  selectedAddress.value = address
-}
-
-var selectedAddress = ref<AddressItem>()
-const onShelf = ref(0)
-// 获取商品详情信息
-const goods = ref<GoodsResult>()
-const getGoodsByIdData = async () => {
-  console.log(query.id)
-  const res = await getGoodsById(query.id)
-  goods.value = res.data
-  onShelf.value = goods.value.goodsInfo.onShelf
-  // SKU组件所需格式
-  // localdata.value = {
-  //   _id: res.data.id,
-  //   name: res.data.goodsName,
-  //   price: res.data.price,
-  //   imgUrl: res.data.imgUrl
-  // }
-}
-
-// 页面加载
-onLoad(() => {
-  const memberStore = useMemberStore()
-  console.log(query.userId)
-  getGoodsByIdData()
-  if (memberStore.profile) {
-    getUserAddress()
-  }
-  getGoodsScaleList()
 })
 
 const address = ref<AddressItem[]>()
@@ -81,7 +46,7 @@ const getGoodsScaleList = async () => {
   const res = await getSkuInfo(query.id)
   sku.value = res.data
 }
-
+const imagePath = ref<string>('')
 // 轮播图变化时
 const currentIndex = ref(0)
 const onChange: UniHelper.SwiperOnChange = (ev) => {
@@ -125,126 +90,44 @@ const openSkuPopup = (val: SkuMode) => {
 const childComponentRef = ref(null)
 // SKU组件实例
 const skuPopupRef = ref<SkuPopupInstance>()
-
-const toComment = (id: string) => {
-  uni.navigateTo({ url: `/pagesOrder/comment/comment?goodsId=${id}` })
-}
-
-const saveChanges = () => {
-  console.log(goods.value)
-  const data = goods.value
-  updateGood(data.goodsInfo).then((res) => {
-    if (res.msg === 'success') {
-      uni.showToast({
-        title: '保存成功!',
-        icon: 'success',
-        duration: 2000,
-      })
-    }
-  })
-}
-
-const changeShelf = async () => {
-  const state = onShelf.value == 1 ? 0 : 1
-  const res = await setOnShelf({
-    id: goods.value.goodsInfo.id,
-    state: state,
-  }).then((r) => {
-    console.log(r)
-    if (r.msg === 'success') {
-      uni.showToast({
-        title: '操作成功!',
-        icon: 'success',
-        duration: 2000,
-      })
-      onShelf.value = 1 - onShelf.value
-    }
-  })
-}
-
-const deleteGood = async () => {
-  uni.showModal({
-    title: '提示',
-    // 提示文字
-    content: '确认删除该条信息吗？',
-    // 取消按钮的文字自定义
-    cancelText: '取消',
-    // 确认按钮的文字自定义
-    confirmText: '删除',
-    //删除字体的颜色
-    confirmColor: 'red',
-    //取消字体的颜色
-    cancelColor: '#000000',
-    success: function (res) {
-      if (res.confirm) {
-      }
-      // const res = deleteById(goods.value.goodsInfo.id);
-      //
-    },
-  })
-}
-
-const deletImageById = (id: number) => {
-  console.log(id)
-  uni.showModal({
-    title: '提示',
-    content: '确认删除该图片吗？',
-    success: function (res) {
-      if (res.confirm) {
-        deletImage(id).then((res) => {
-          if (res.msg === 'success') {
-            uni.showToast({
-              title: '删除成功!',
-              icon: 'success',
-              duration: 2000,
-            })
-            goods.value.images = goods.value.images.filter((item) => item.id !== id)
-          } else {
-            uni.showToast({
-              title: '删除失败!',
-              icon: 'none',
-              duration: 2000,
-            })
-          }
-        })
-      }
-    },
-  })
-}
-const addImage = () => {
+const addThumb = () => {
   uni.chooseImage({
     count: 1,
     sizeType: ['original', 'compressed'],
     sourceType: ['album', 'camera'],
     success: function (res) {
       console.log(res)
+      imagePath.value = res.tempFilePaths[0]
       const tempFilePaths = res.tempFilePaths
-      uni.uploadFile({
-        url: `/goods/admin/add/image/${goods.value.goodsInfo.id}`,
-        filePath: tempFilePaths[0],
-        name: 'file',
-        success: function (res) {
-          const data = JSON.parse(res.data)
-          console.log(data)
-          if (data.msg === 'success') {
-            uni.showToast({
-              title: '上传成功!',
-              icon: 'success',
-              duration: 2000,
-            })
-            console.log(data)
-            console.log(data.data.imgs)
-            goods.value.images.push(data.data.imgs[0])
-            console.log(goods.value.images)
-          } else {
-            uni.showToast({
-              title: '上传失败!',
-              icon: 'none',
-              duration: 2000,
-            })
-          }
-        },
-      })
+    },
+  })
+}
+
+const addGoods = async () => {
+  console.log(newGoods.value)
+  uni.uploadFile({
+    url: '/goods/admin/add',
+    filePath: imagePath.value,
+    name: 'image',
+    formData: {
+      ...newGoods.value,
+    },
+    success: function (res) {
+      const data = JSON.parse(res.data)
+      console.log(data)
+      if (data.msg === 'success') {
+        uni.showToast({
+          title: '新建成功!',
+          icon: 'success',
+          duration: 2000,
+        })
+      } else {
+        uni.showToast({
+          title: '新建失败!',
+          icon: 'none',
+          duration: 2000,
+        })
+      }
     },
   })
 }
@@ -256,9 +139,9 @@ const addImage = () => {
     <view class="goods">
       <!-- 商品主图 -->
       <view class="preview">
-        <swiper @change="onChange">
-          <swiper-item v-for="item in goods?.images">
-            <image class="fruit-logo" src="../../static/images/logo.jpg"></image>
+        <swiper>
+          <swiper-item>
+            <image class="image" src="../../static/images/logo.jpg"></image>
           </swiper-item>
         </swiper>
         <view class="indicator">
@@ -273,15 +156,37 @@ const addImage = () => {
         <view class="price">
           <text class="symbol">¥</text>
           <input :type="number" required v-model.number="newGoods.price" />
-          <view class="share-btn" @click="openPopup('share')"></view>
         </view>
-        <input class="name ellipsis" required v-model="newGoods.goodsName" placeholder="商品名称" />
+        <input
+          class="name ellipsis"
+          required
+          v-model="newGoods.goodsName"
+          placeholder="商品名称(必填)"
+        />
         <input class="name ellipsis" required v-model="newGoods.category" placeholder="商品种类" />
-        <input class="name ellipsis" required v-model="newGoods.discount" placeholder="商品折扣" />
+        <input
+          type="number"
+          class="name ellipsis"
+          v-model="newGoods.discount"
+          placeholder="商品折扣"
+        />
         <input class="name ellipsis" v-model="newGoods.productRegion" placeholder="商品产地" />
-        <input class="name ellipsis" v-model="newGoods.productTime" placeholder="商品生产日期" />
-        <input class="desc" v-model="newGoods.description" placeholder="请在此输入商品介绍" />
-        <input class="desc" v-model="newGoods.notes" placeholder="请在此输入商品注意点" />
+        <input class="name ellipsis" disabled placeholder="生产日期" />
+        <uni-datetime-picker
+          v-model="newGoods.productTime"
+          type="date"
+          @change="console.log(newGoods)"
+        />
+        <!-- 生产日期 -->
+        <textarea class="desc" v-model="newGoods.advantage" placeholder="请在此输入商品优势" />
+        <textarea
+          class="desc"
+          style="padding-top: 20px"
+          v-model="newGoods.description"
+          placeholder="请在此输入商品详情描述"
+        />
+        <textarea class="desc" v-model="newGoods.introduction" placeholder="请在此输入商品介绍" />
+        <textarea class="desc" v-model="newGoods.notes" placeholder="请在此输入商品注意点" />
       </view>
       <!-- 操作面板 -->
     </view>
@@ -289,32 +194,13 @@ const addImage = () => {
     <!-- 商品详情 -->
     <view class="detail panel">
       <view class="title">
-        <button type="primary" @click="addImage">添加图片</button>
-      </view>
-      <view class="comment">
-        <template v-for="(item, index) in goods?.comments.slice(0, 3)" :key="index">
-          <view>
-            <view class="purchaser">
-              <img class="avatar" :src="item.avatarUrl" alt="" />
-              <text class="name">{{ item.publisher }}</text>
-            </view>
-            <view class="content">{{ item.content }}</view>
-          </view>
-        </template>
+        <button type="primary" @click="addThumb">添加缩略图片</button>
+        <button type="primary" @click="addGoods">新建商品</button>
       </view>
       <view style="height: 200rpx"> </view>
     </view>
   </scroll-view>
-
-  <view v-if="goods" class="toolbar" :style="{ paddingBottom: safeAreaInsets?.bottom + 'px' }">
-    <view class="buttons">
-      <view class="payment" @tap="deleteGood()"> 删除 </view>
-      <view class="payment" @tap="saveChanges()"> 保存 </view>
-      <view class="payment" @tap="changeShelf()">
-        {{ onShelf ? '下架' : '上架' }}
-      </view>
-    </view>
-  </view>
+  <!-- TODO: 生产日期选择，折扣是不是数字，创建商品是否跑通，规格添加和管理写完，然后整体项目删掉一些冗余的东西 -->
 </template>
 
 <style lang="scss">
@@ -328,13 +214,12 @@ page {
 .viewport {
   background-color: #f4f4f4;
 }
-
 .panel {
   margin-top: 20rpx;
   background-color: #fff;
   .title {
     display: flex;
-    justify-content: center;
+    justify-content: space-around;
     align-items: center;
     height: 90rpx;
   }
@@ -342,18 +227,6 @@ page {
     padding-top: 20px;
     padding-left: -10px;
   }
-}
-
-.share-btn {
-  position: absolute;
-  top: 40rpx;
-  right: 20rpx;
-  width: 50rpx;
-  height: 50rpx;
-  text-align: center;
-  line-height: 50rpx;
-  background-image: url('https://image.familystudy.cn/image/jxfruit/share.webp');
-  background-size: contain;
 }
 
 .arrow {

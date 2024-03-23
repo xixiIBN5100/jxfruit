@@ -27,6 +27,7 @@ export type SkuItem = {
   totalInventory: number
   nowInventory: number
   soldAmount: number
+  attribute?: string
 }
 export type GoodsImageItem = {
   id: number
@@ -37,11 +38,21 @@ export type GoodsImageItem = {
 export type newGood = {
   goodsName: string
   price: number
-  discount: string
+  discount?: number
+  advantage?: string
   productRegion?: string
   productTime?: string
-  thumbNail: string
-  category: string
+  thumbNail?: string
+  category?: string
   description?: string
+  introduction?: string
   notes?: string
+  file?: File
+}
+
+export type newSku = {
+  scale: string
+  price: number
+  totalInventory: number
+  attributes: string
 }

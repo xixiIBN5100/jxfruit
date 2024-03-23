@@ -12,13 +12,19 @@ import type { GoodsItem, GoodsResult, SkuItem, GoodsImageItem } from '@/types/go
 import type { AddressItem } from '@/types/address'
 import { onLoad } from '@dcloudio/uni-app'
 import { computed, ref, onMounted } from 'vue'
-import { updateGood, deleteById, setOnShelf, deletImage } from '@/services/adminGoods'
-import { profile } from 'console'
+import {
+  updateGood,
+  deleteById,
+  setOnShelf,
+  deletImage,
+  updateScale,
+  deleteScale,
+} from '@/services/adminGoods'
 // import uni from '@dcloudio/vite-plugin-uni'
 // 获取屏幕边界到安全区域距离
 const { safeAreaInsets } = uni.getSystemInfoSync()
 import { useMemberStore } from '@/stores'
-import { title } from 'process'
+import type { newSku } from '@/types/goods'
 // 接收页面参数
 const query = defineProps<{
   id: string
@@ -29,6 +35,7 @@ const selectAddress = (address) => {
   console.log(address)
   selectedAddress.value = address
 }
+const scaleData = ref<newSku[]>([])
 
 var selectedAddress = ref<AddressItem>()
 const onShelf = ref(0)
@@ -39,6 +46,16 @@ const getGoodsByIdData = async () => {
   const res = await getGoodsById(query.id)
   goods.value = res.data
   onShelf.value = goods.value.goodsInfo.onShelf
+  scaleData.value = goods.value.skus.map((item) => {
+    return {
+      id: item.id,
+      price: item.price,
+      scale: item.scale,
+      totalInventory: item.totalInventory,
+      attributes: item.attributes,
+    }
+  })
+  console.log(scaleData.value)
   // SKU组件所需格式
   // localdata.value = {
   //   _id: res.data.id,
@@ -166,7 +183,7 @@ const deleteGood = async () => {
   uni.showModal({
     title: '提示',
     // 提示文字
-    content: '确认删除该条信息吗？',
+    content: '确认删除该商品吗？',
     // 取消按钮的文字自定义
     cancelText: '取消',
     // 确认按钮的文字自定义
@@ -177,9 +194,23 @@ const deleteGood = async () => {
     cancelColor: '#000000',
     success: function (res) {
       if (res.confirm) {
+        deleteById(goods.value.goodsInfo.id).then((res) => {
+          if (res.msg === 'success') {
+            uni.showToast({
+              title: '删除成功!',
+              icon: 'success',
+              duration: 2000,
+            })
+            uni.navigateBack()
+          } else {
+            uni.showToast({
+              title: '删除失败!',
+              icon: 'none',
+              duration: 2000,
+            })
+          }
+        })
       }
-      // const res = deleteById(goods.value.goodsInfo.id);
-      //
     },
   })
 }
@@ -248,6 +279,55 @@ const addImage = () => {
     },
   })
 }
+
+const deletScaleById = (id: number) => {
+  console.log(id)
+  uni.showModal({
+    title: '提示',
+    content: '确认删除该规格吗？',
+    success: function (res) {
+      if (res.confirm) {
+        deleteScale(id).then((res) => {
+          if (res.msg === 'success') {
+            uni.showToast({
+              title: '删除成功!',
+              icon: 'success',
+              duration: 2000,
+            })
+            goods.value.skus = goods.value?.skus.filter((item) => item.id !== id)
+          } else {
+            uni.showToast({
+              title: '删除失败!',
+              icon: 'none',
+              duration: 2000,
+            })
+          }
+        })
+      }
+    },
+  })
+}
+
+const changeScale = (id: number) => {
+  console.log(id)
+  const data = goods.value.skus.find((item) => item.id === id)
+  console.log(data)
+  updateScale(data).then((res) => {
+    if (res.msg === 'success') {
+      uni.showToast({
+        title: '修改成功!',
+        icon: 'success',
+        duration: 2000,
+      })
+    } else {
+      uni.showToast({
+        title: '修改失败!',
+        icon: 'none',
+        duration: 2000,
+      })
+    }
+  })
+}
 </script>
 
 <template>
@@ -265,7 +345,6 @@ const addImage = () => {
               mode="aspectFill"
               :src="item?.imgUrl"
             />
-            <button>删除</button>
             <!-- <image class="fruit-logo" src="../../static/images/logo.jpg"></image> -->
           </swiper-item>
         </swiper>
@@ -293,17 +372,23 @@ const addImage = () => {
     <view class="detail panel">
       <view class="title">
         <button type="primary" @click="addImage">添加图片</button>
+        <button type="primary" @click="addImage">添加规格</button>
       </view>
-      <view class="comment">
-        <template v-for="(item, index) in goods?.comments.slice(0, 3)" :key="index">
-          <view>
-            <view class="purchaser">
-              <img class="avatar" :src="item.avatarUrl" alt="" />
-              <text class="name">{{ item.publisher }}</text>
-            </view>
-            <view class="content">{{ item.content }}</view>
-          </view>
-        </template>
+      <view class="scale">
+        <div class="item" v-for="item in goods?.skus" :key="item.id">
+          <text class="label">规格：</text>
+          <input class="value" v-model="item.scale" />
+          <text class="label">单价：</text>
+          <input class="value" v-model="item.price" />
+          <text class="label">总库存：</text>
+          <input class="value" v-model="item.totalInventory" />
+          <text class="label">说明：</text>
+          <input class="value" v-model="item.attribute" />
+          <div class="button">
+            <button type="primary" @click="changeScale(item.id)">修改该规格</button>
+            <button type="warn" @click="deletScaleById(item.id)">删除该规格</button>
+          </div>
+        </div>
       </view>
       <view style="height: 200rpx"> </view>
     </view>
@@ -337,7 +422,7 @@ page {
   background-color: #fff;
   .title {
     display: flex;
-    justify-content: center;
+    justify-content: space-around;
     align-items: center;
     height: 90rpx;
   }
@@ -555,25 +640,35 @@ page {
   }
 }
 
-.comment {
-  padding-left: 20rpx;
-  .purchaser {
-    font-weight: 700;
-    .avatar {
-      width: 80rpx;
-      height: 80rpx;
-      border-radius: 50%;
+.scale {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  //竖着排列，每列占一行
+  .item {
+    width: 100%;
+    padding: 20rpx;
+    border-bottom: 1rpx solid #eaeaea;
+    .label {
+      font-size: 26rpx;
+      color: #333;
+    }
+    .value {
+      width: 60rpx;
+      font-size: 26rpx;
+      color: #333;
     }
   }
-  .name {
-    font-size: 28rpx;
-    margin-left: 20rpx;
-  }
-  .content {
-    padding-left: 20rpx;
-    padding-right: 20rpx;
-    margin-top: 10rpx;
-    font-size: 28rpx;
+  .button {
+    display: flex;
+    justify-content: space-around;
+    button {
+      width: 200rpx;
+      height: 60rpx;
+      font-size: 26rpx;
+      color: #fff;
+      border-radius: 60rpx;
+    }
   }
 }
 
