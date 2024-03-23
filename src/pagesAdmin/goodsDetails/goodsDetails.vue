@@ -296,7 +296,8 @@ const changeScale = (id: number) => {
 
 const popNewScale = () => {
   //弹出新建规格弹窗
-  newScalePop.value[0].open()
+  console.log(newScalePop)
+  newScalePop.value.open()
 }
 const comfimNewScale = (id: number) => {
   console.log(newScaleData)
@@ -307,7 +308,10 @@ const comfimNewScale = (id: number) => {
         icon: 'success',
         duration: 2000,
       })
-      newScalePop.value[0].close()
+      //添加到当前商品的规格列表
+      goods.value.skus.push(newScaleData.value)
+
+      newScalePop.value.close()
     } else {
       uni.showToast({
         title: '新建失败!',
@@ -379,33 +383,31 @@ onMounted(() => {
             <button type="primary" @click="changeScale(item.id)">修改该规格</button>
             <button type="warn" @click="deletScaleById(item.id)">删除该规格</button>
           </div>
-          <uni-popup ref="newScalePop" type="center">
-            <view class="popup-content">
-              <view class="form-item">
-                <text class="label">规格：</text>
-                <input class="value" v-model="newScaleData.scale" />
-              </view>
-              <view class="form-item">
-                <text class="label">价格：</text>
-                <input class="value" v-model="newScaleData.price" />
-              </view>
-              <view class="form-item">
-                <text class="label">总库存：</text>
-                <input class="value" v-model="newScaleData.totalInventory" />
-              </view>
-              <view class="form-item">
-                <text class="label">说明：</text>
-                <input style="width: 100px" v-model="newScaleData.attribute" />
-              </view>
-              <view class="button">
-                <button type="primary" @click="comfimNewScale(goods?.goodsInfo.id)">
-                  确认新建
-                </button>
-              </view>
-            </view>
-          </uni-popup>
         </div>
       </view>
+      <uni-popup ref="newScalePop" type="center">
+        <view class="popup-content">
+          <view class="form-item">
+            <text class="label">规格：</text>
+            <input class="value" v-model="newScaleData.scale" />
+          </view>
+          <view class="form-item">
+            <text class="label">价格：</text>
+            <input class="value" v-model="newScaleData.price" />
+          </view>
+          <view class="form-item">
+            <text class="label">总库存：</text>
+            <input class="value" v-model="newScaleData.totalInventory" />
+          </view>
+          <view class="form-item">
+            <text class="label">说明：</text>
+            <input style="width: 100px" v-model="newScaleData.attribute" />
+          </view>
+          <view class="button">
+            <button type="primary" @click="comfimNewScale(goods?.goodsInfo.id)">确认新建</button>
+          </view>
+        </view>
+      </uni-popup>
       <view style="height: 200rpx"> </view>
     </view>
   </scroll-view>
@@ -443,6 +445,27 @@ page {
   flex-direction: column;
   //圆角
   border-radius: 20px;
+  .item {
+    width: 100%;
+    padding: 20rpx;
+    border-bottom: 1rpx solid #eaeaea;
+    .label {
+      font-size: 26rpx;
+      color: #333;
+    }
+    .value {
+      width: 100px;
+      height: 60rpx;
+      font-size: 26rpx;
+      color: #333;
+    }
+    .text {
+      height: 30px;
+      width: 250px;
+      font-size: 26rpx;
+      color: #333;
+    }
+  }
 }
 
 .panel {
