@@ -50,9 +50,9 @@ export type newGood = {
   file?: File
 }
 
-export type newSku = {
+export type newScale = {
   scale: string
   price: number
   totalInventory: number
-  attributes: string
+  attribute: string
 }

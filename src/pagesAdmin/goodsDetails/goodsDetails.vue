@@ -11,7 +11,7 @@ import type { CartItem } from '@/types/cart'
 import type { GoodsItem, GoodsResult, SkuItem, GoodsImageItem } from '@/types/goods'
 import type { AddressItem } from '@/types/address'
 import { onLoad } from '@dcloudio/uni-app'
-import { computed, ref, onMounted } from 'vue'
+import { computed, ref, onMounted, reactive } from 'vue'
 import {
   updateGood,
   deleteById,
@@ -24,20 +24,24 @@ import {
 // 获取屏幕边界到安全区域距离
 const { safeAreaInsets } = uni.getSystemInfoSync()
 import { useMemberStore } from '@/stores'
-import type { newSku } from '@/types/goods'
+import type { newScale } from '@/types/goods'
+import { addScale } from '../../services/adminGoods'
 // 接收页面参数
 const query = defineProps<{
   id: string
   userId: string
 }>()
-
+const newScaleData = ref<newScale>({ scale: '', price: 0, totalInventory: 0, attribute: '' })
+const state = reactive({
+  popup: ref(null),
+})
+const newScalePop = ref(null)
 const selectAddress = (address) => {
   console.log(address)
   selectedAddress.value = address
 }
-const scaleData = ref<newSku[]>([])
 
-var selectedAddress = ref<AddressItem>()
+var selectedAddress = ref<AddressItem>({})
 const onShelf = ref(0)
 // 获取商品详情信息
 const goods = ref<GoodsResult>()
@@ -46,16 +50,6 @@ const getGoodsByIdData = async () => {
   const res = await getGoodsById(query.id)
   goods.value = res.data
   onShelf.value = goods.value.goodsInfo.onShelf
-  scaleData.value = goods.value.skus.map((item) => {
-    return {
-      id: item.id,
-      price: item.price,
-      scale: item.scale,
-      totalInventory: item.totalInventory,
-      attributes: item.attributes,
-    }
-  })
-  console.log(scaleData.value)
   // SKU组件所需格式
   // localdata.value = {
   //   _id: res.data.id,
@@ -64,15 +58,11 @@ const getGoodsByIdData = async () => {
   //   imgUrl: res.data.imgUrl
   // }
 }
-
 // 页面加载
 onLoad(() => {
   const memberStore = useMemberStore()
   console.log(query.userId)
   getGoodsByIdData()
-  if (memberStore.profile) {
-    getUserAddress()
-  }
   getGoodsScaleList()
 })
 
@@ -84,7 +74,6 @@ const address = ref<AddressItem[]>()
 //   address.value = res.data
 // }
 
-const sku = ref<SkuItem[]>()
 const getGoodsScaleList = async () => {
   const res = await getSkuInfo(query.id)
   sku.value = res.data
@@ -106,19 +95,6 @@ const onTapImage = (url: string) => {
   })
 }
 
-// uni-ui 弹出层组件 ref
-const popup = ref<{
-  open: (type?: UniHelper.UniPopupType) => void
-  close: () => void
-}>()
-
-// 弹出层条件渲染
-const popupName = ref<'address' | 'service' | 'scale' | 'share'>()
-const openPopup = (name: typeof popupName.value) => {
-  // 修改弹出层名称
-  popupName.value = name
-  popup.value?.open()
-}
 // 是否显示SKU组件
 const isShowSku = ref(false)
 // 商品信息
@@ -130,15 +106,6 @@ enum SkuMode {
   Buy = 3,
 }
 var mode = ref<SkuMode>(SkuMode.Cart)
-// 打开SKU弹窗修改按钮模式
-const openSkuPopup = (val: SkuMode) => {
-  ;(popupName.value = 'scale'), popup.value?.open()
-  // // 显示SKU弹窗
-  // isShowSku.value = true
-  // // 修改按钮模式
-  mode.value = val
-}
-
 const childComponentRef = ref(null)
 // SKU组件实例
 const skuPopupRef = ref<SkuPopupInstance>()
@@ -263,8 +230,6 @@ const addImage = () => {
               icon: 'success',
               duration: 2000,
             })
-            console.log(data)
-            console.log(data.data.imgs)
             goods.value.images.push(data.data.imgs[0])
             console.log(goods.value.images)
           } else {
@@ -328,6 +293,33 @@ const changeScale = (id: number) => {
     }
   })
 }
+
+const popNewScale = () => {
+  //弹出新建规格弹窗
+  newScalePop.value[0].open()
+}
+const comfimNewScale = (id: number) => {
+  console.log(newScaleData)
+  addScale(id, newScaleData.value).then((res) => {
+    if (res.msg === 'success') {
+      uni.showToast({
+        title: '新建成功!',
+        icon: 'success',
+        duration: 2000,
+      })
+      newScalePop.value[0].close()
+    } else {
+      uni.showToast({
+        title: '新建失败!',
+        icon: 'none',
+        duration: 2000,
+      })
+    }
+  })
+}
+onMounted(() => {
+  console.log(newScalePop)
+})
 </script>
 
 <template>
@@ -360,10 +352,9 @@ const changeScale = (id: number) => {
         <view class="price">
           <text class="symbol">¥</text>
           <input :type="number" v-model.number="goods.goodsInfo.price" />
-          <view class="share-btn" @click="openPopup('share')"></view>
         </view>
         <input class="name ellipsis" v-model="goods.goodsInfo.goodsName" />
-        <input class="desc" v-model="goods.goodsInfo.description" />
+        <textarea class="desc" v-model="goods.goodsInfo.description" />
       </view>
       <!-- 操作面板 -->
     </view>
@@ -372,7 +363,7 @@ const changeScale = (id: number) => {
     <view class="detail panel">
       <view class="title">
         <button type="primary" @click="addImage">添加图片</button>
-        <button type="primary" @click="addImage">添加规格</button>
+        <button type="primary" @click="popNewScale">添加规格</button>
       </view>
       <view class="scale">
         <div class="item" v-for="item in goods?.skus" :key="item.id">
@@ -383,11 +374,36 @@ const changeScale = (id: number) => {
           <text class="label">总库存：</text>
           <input class="value" v-model="item.totalInventory" />
           <text class="label">说明：</text>
-          <input class="value" v-model="item.attribute" />
+          <textarea class="text" v-model="item.attribute" />
           <div class="button">
             <button type="primary" @click="changeScale(item.id)">修改该规格</button>
             <button type="warn" @click="deletScaleById(item.id)">删除该规格</button>
           </div>
+          <uni-popup ref="newScalePop" type="center">
+            <view class="popup-content">
+              <view class="form-item">
+                <text class="label">规格：</text>
+                <input class="value" v-model="newScaleData.scale" />
+              </view>
+              <view class="form-item">
+                <text class="label">价格：</text>
+                <input class="value" v-model="newScaleData.price" />
+              </view>
+              <view class="form-item">
+                <text class="label">总库存：</text>
+                <input class="value" v-model="newScaleData.totalInventory" />
+              </view>
+              <view class="form-item">
+                <text class="label">说明：</text>
+                <input style="width: 100px" v-model="newScaleData.attribute" />
+              </view>
+              <view class="button">
+                <button type="primary" @click="comfimNewScale(goods?.goodsInfo.id)">
+                  确认新建
+                </button>
+              </view>
+            </view>
+          </uni-popup>
         </div>
       </view>
       <view style="height: 200rpx"> </view>
@@ -415,6 +431,18 @@ page {
 
 .viewport {
   background-color: #f4f4f4;
+}
+
+.popup-content {
+  background-color: #f4f4f4;
+  height: 300px;
+  width: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  //圆角
+  border-radius: 20px;
 }
 
 .panel {
@@ -654,7 +682,14 @@ page {
       color: #333;
     }
     .value {
-      width: 60rpx;
+      width: 100px;
+      height: 60rpx;
+      font-size: 26rpx;
+      color: #333;
+    }
+    .text {
+      height: 30px;
+      width: 250px;
       font-size: 26rpx;
       color: #333;
     }
