@@ -26,10 +26,18 @@ export const orderStateList = [
 
 
 export enum CouponState {
+  /**未使用 */
+  WeiShiYong = 0,
+  /** 已使用*/
+  YiShiYong = 1,
+  /** 已过期 */
+  YiGuoQi = 1,
+
 
 }
 
 export const CouponStateList = [
-  { id: 1, },
-  { }
+  { id: 1, text: '未使用' },
+  { id: 2, text: '已过期' },
+  { id: 3, text: '已使用' },
 ]
