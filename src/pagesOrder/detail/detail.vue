@@ -4,11 +4,15 @@ import {
   deleteMemberOrder,
   getMemberOrderById,
   getMemberOrderCancelById,
+  // getMemberOrderLogisticsByIdAPI,
+  // getMemberOrderConsignmentByIdAPI,
   putMemberOrderReceiptById
 } from '@/services/order'
 import CommentBox from '../../components/CommentBox.vue'
+// import type { LogisticItem, OrderResult } from '@/types/order'
 import { onLoad, onReady } from '@dcloudio/uni-app'
 import { ref } from 'vue'
+import PageSkeleton from './components/PageSkeleton.vue'
 import { getPayWxPayMiniPay, wxPay} from '@/services/pay'
 
 // 获取屏幕边界到安全区域距离
@@ -87,7 +91,7 @@ const getMemberOrderByIdData = async () => {
   //   [OrderState.DaiShouHuo, OrderState.DaiPingJia, OrderState.YiWanCheng].includes(
   //     order.value.orderState,
   //   )
-  // )
+  // ) 
   // {
     // getMemberOrderLogisticsByIdData()
   // }
@@ -125,16 +129,16 @@ const onOrderPay = async () => {
     package: res.data.package, // 统一下单接口返回的 prepay_id 参数值，格式如“prepay_id=*”
     signType: res.data.signType, // 签名算法类型，默认为 MD5，支持RSA等其他加密算法
     paySign: res.data.paySign, // 签名，详见签名生成算法
-    success: function (response) {
+    success: function (response) { 
       // 支付成功后的回调函数， res.errMsg = 'requestPayment:ok'
       console.log(response)
       uni.redirectTo({ url: `/pagesOrder/payment/payment?id=${query.id}` })
     },
-    fail: function (response) {
+    fail: function (response) { 
       console.log(response)
       // 支付失败或取消支付后的回调函数， res.errMsg = 'requestPayment:fail cancel' 取消支付；res.errMsg = 'requestPayment:fail (detail error message)'
     }
-  })
+  })  
 }
 
 
@@ -261,7 +265,7 @@ const onOrderCancel = async () => {
               再次购买
             </navigator>
             <!-- 待发货状态：模拟发货,开发期间使用,用于修改订单状态为已发货 -->
-
+         
             <!-- 待收货状态: 展示确认收货按钮 -->
             <view
               v-if="order.orderState === OrderState.DaiShouHuo"
@@ -309,15 +313,15 @@ const onOrderCancel = async () => {
                   <text>{{ item.price }}</text>
                 </view>
               </view>
-
+             
             </view>
             <view>
                 <view  v-if="order.orderState === OrderState.DaiPingJia
                 && item.is_commented === 0"
-                  @tap.stop="onComment(item.goodsId)" class="button"> 去评价
+                  @tap.stop="onComment(item.goodsId)" class="button"> 去评价 
                 </view>
                 <view v-if="order.orderState !== OrderState.DaiFuKuan"
-                  @tap.stop="onRefund(item.id)" class="button refund"> 申请退款
+                  @tap.stop="onRefund(item.id)" class="button refund"> 申请退款 
                 </view>
                 <view class="quantity">x{{ item.num }}</view>
             </view>
@@ -523,7 +527,7 @@ page {
     border-radius: 68rpx;
     background-color: #fff;
   }
-
+  
 }
 
 .shipment {
@@ -669,7 +673,7 @@ page {
       // display: flex;
       // flex-direction: row-reverse;
       // justify-content: flex-start;
-
+      
 
       // .button {
       //   margin: 0 auto;

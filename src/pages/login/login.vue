@@ -15,16 +15,11 @@
 
       <!-- 小程序端授权登录 -->
       <!-- #ifdef MP-WEIXIN -->
-      <button class="button phone" v-if="!admin"
+      <button class="button phone" 
       @tap="onGetphonenumber">
         <text class="icon"></text>
         一键登录/注册
       </button>
-      <view v-if="admin">
-        <input v-model="form.account" class="input" type="text" placeholder="请输入用户名/手机号码" />
-        <input v-model="form.password" class="input" type="text" password placeholder="请输入密码" />
-        <button @tap="onSubmit" class="button phone">登录</button>
-      </view>
       <!-- #endif -->
 
       <!-- <view class="extra">
@@ -38,14 +33,11 @@
           </button>
         </view>
       </view> -->
-      <view class="tips">
+      <view class="tips"> 
         <checkbox-group class="check">
           <checkbox @tap="check"></checkbox>
         </checkbox-group>
         您已知晓并同意 <text class="content-link" @tap="jumpPrivacy">《小程序隐私保护指引》</text></view>
-    </view>
-    <view class="admin">
-      <text class="content-link" @tap="showAdmin">管理员登录</text>
     </view>
     <!-- #ifdef MP-WEIXIN -->
     <ws-wx-privacy id="privacy-popup"></ws-wx-privacy>
@@ -60,7 +52,6 @@
     data(){
       return{
         approve: false,
-        admin: false,
         form: {
           account: '13123456789',
           password: ''
@@ -68,17 +59,17 @@
       }
     },
     onLoad() {
-      // //#ifdef MP-WEIXIN
-      // wx.requirePrivacyAuthorize({
-      //   success: () => {
-      //     console.log('点击同意');
-      //   },
-      //     fail: () => {
-      //       console.log('点击拒绝');
-      //   },
-      //     complete: () => {
-      //       console.log('用户已点击');
-      //   }
+      // //#ifdef MP-WEIXIN        
+      // wx.requirePrivacyAuthorize({            
+      //   success: () => {                
+      //     console.log('点击同意');            
+      //   },            
+      //     fail: () => {                
+      //       console.log('点击拒绝');                            
+      //   },             
+      //     complete: () => {                
+      //       console.log('用户已点击');            
+      //   }       
       // })
     },
     methods:{
@@ -101,7 +92,7 @@
         // 成功提示
         uni.showToast({ icon: 'success', title: '登录成功' })
 
-
+        
 
 
           setTimeout(() => {
@@ -115,10 +106,6 @@
           success: () => {}, // 打开成功
           fail: () => {}, // 打开失败
         })
-      },
-
-      showAdmin() {
-        this.admin = !this.admin
       },
 
       // //#endif
@@ -147,7 +134,7 @@
             const response = await loginByWechat({ code })
             if (response.code === 200) {
               this_.onSuccess(response.data)
-            }
+            } 
             else {
               uni.login({
                 success: async function (res) {
@@ -156,10 +143,10 @@
                     console.log(registerRes.data.openId)
                     localStorage.setItem("openId", openId)
                     this_.onSuccess(registerRes.data)
-                  }
+                  } 
                 }
-              })
-            }
+              })            
+            }        
           }
         })
       }
@@ -172,8 +159,8 @@ page {
   height: 100%;
 }
 
-checkbox .wx-checkbox-input {
-  border-radius: 50%;/*圆角*/ width: 35rpx;/*背景的宽*/ height: 35rpx;/*背景的高*/
+checkbox .wx-checkbox-input { 
+  border-radius: 50%;/*圆角*/ width: 35rpx;/*背景的宽*/ height: 35rpx;/*背景的高*/ 
 }
 
 checkbox .wx-checkbox-input.wx-checkbox-input-checked::before{
@@ -208,14 +195,12 @@ checkbox .wx-checkbox-input.wx-checkbox-input-checked::before{
 
 .login {
   display: flex;
-
   flex-direction: column;
   height: 60vh;
   padding: 40rpx 20rpx 20rpx;
 
   .input {
     width: 100%;
-    margin-top: 20px;
     height: 80rpx;
     font-size: 28rpx;
     border-radius: 72rpx;
@@ -311,18 +296,6 @@ checkbox .wx-checkbox-input.wx-checkbox-input-checked::before{
   display: flex;
   position: absolute;
   bottom: 80rpx;
-  left: 50%;
-  transform: translate(-50%);
-  right: 20rpx;
-  font-size: 22rpx;
-  color: #999;
-  text-align: center;
-  width: 500rpx;
-  align-items: center;
-}
-.admin {
-  position: absolute;
-  bottom: 20rpx;
   left: 50%;
   transform: translate(-50%);
   right: 20rpx;
