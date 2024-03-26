@@ -1,53 +1,61 @@
-<script setup lang="ts" >
-import type {MemberItem} from '@/types/member'
-import {computed, onMounted, ref, watch} from 'vue'
-import {useMemberStore} from '@/stores'
-import {getMemberInfo} from "@/services/member";
+<script setup lang="ts">
+import type { MemberItem } from '@/types/member'
+import { computed, onMounted, ref, watch } from 'vue'
+import { useMemberStore } from '@/stores'
+import { getMemberInfo } from '@/services/member'
 
 const newuseMemberStore = useMemberStore()
 const memberInfo = getMemberInfo()
-const level = ref();
+const level = ref()
 const memberInfomation = ref()
+const diff = ref()
 const couponData = {
   isFlipped: false,
 }
-const variable = ref(); // 初始化变量
-memberInfo.then(result => {
-  memberInfomation.value = result.data.membership;
-  console.log(memberInfomation.value);
-  level.value = memberInfomation.value.name;
-  variable.value = memberInfomation.value.vipLevel;
-}).catch(error => {
-  // 处理错误
-  console.error(error);
-});
+const showToast = () => {
+  uni.showModal({
+    title: '会员须知',
+    content: '当前该等级会员: ' + memberInfomation.value.requirement + '\n' +memberInfomation.value.treatment
+  })
+}
+const variable = ref() // 初始化变量
+memberInfo
+  .then((result) => {
+    memberInfomation.value = result.data.membership
+    console.log(memberInfomation.value)
+    diff.value = memberInfomation.value.diffToNextLevel
+    level.value = memberInfomation.value.name
+    variable.value = memberInfomation.value.vipLevel
+  })
+  .catch((error) => {
+    // 处理错误
+    console.error(error)
+  })
 // 计算属性，根据变量的值返回相应的背景颜色
 const cardColor = computed(() => {
   switch (variable.value) {
     case 0:
-      return '#c2b2a4';
+      return '#c2b2a4'
     case 1:
-      return '#f8c9a0';
+      return '#f8c9a0'
     case 2:
-      return '#eca263';
+      return '#eca263'
     case 3:
-      return '#d97f32';
+      return '#d97f32'
     case 4:
-      return '#b95b09';
-
+      return '#b95b09'
   }
-});
+})
 
-
-const memberTypes  = [
+const memberTypes = [
   {
     type: 'a1',
-    text: '生日礼',
+    text: '会员免运费',
     imgUrl: 'https://image.familystudy.cn/image/jxfruit/会员免运费1.webp',
   },
   {
     type: 'a2',
-    text: '优惠秒杀',
+    text: '每月一分领',
     imgUrl: 'https://image.familystudy.cn/image/jxfruit/每月一分领.webp',
   },
   {
@@ -57,20 +65,22 @@ const memberTypes  = [
   },
   {
     type: 'a4',
-    text: '尊享折扣',
+    text: '抽优惠券',
     imgUrl: 'https://image.familystudy.cn/image/jxfruit/抽优惠券.webp',
   },
 ]
+
+
 </script>
 <template>
   <view class="box">
     <div class="membercontainer">
-      <swiper-item>
+      <swiper-item @click='showToast'>
         <view class="card" :style="{ backgroundColor: cardColor }">
-          <text class="member">{{level}}</text>
+          <text class="member">{{ level }}</text>
           <view style="width: 300rpx; margin-left: 90rpx; margin-top: 40rpx">
-            <text style="font-size: 20rpx; margin-top: 10rpx">30目前距离升级还需要消费{{ }} </text>
-            <progress :percent="30" :active="true" :border-radius="3" :stroke-width="3"></progress>
+            <text style="font-size: 20rpx; margin-top: 10rpx">0目前距离升级还需要消费{{ diff }} </text>
+            <progress :percent="0" :active="true" :border-radius="3" :stroke-width="3"></progress>
             <img src="../../static/images/jx_logo.png" class="image" />
           </view>
         </view>
@@ -83,50 +93,20 @@ const memberTypes  = [
         class="navigator"
         style="padding-bottom: 15rpx"
       >
-        <image
-          :src="item.imgUrl"
-          mode="aspectFit"
-          style="margin-bottom: 10rpx"
-        ></image>
+        <image :src="item.imgUrl" mode="aspectFit" style="margin-bottom: 10rpx"></image>
         <view>{{ item.text }}</view>
       </view>
     </view>
     <view class="container">
-      <view class="children1" id="a1">
-        <text class="title1">生日礼</text>
+      <view class="children1">
+        <text class="title1">会员免运费</text>
       </view>
-      <view class="children2" id="a2">
-        <text class="title1">优惠秒杀</text>
-        <swiper class="itemList">
-      <swiper-item class="swiper_buy">
-        <view class="item"> </view>
-        <view class="item"> </view>
-        <view class="item"> </view>
-      </swiper-item>
-      <swiper-item class="swiper_buy">
-        <view class="item"> </view>
-        <view class="item"> </view>
-        <view class="item"> </view>
-      </swiper-item>
-        </swiper>
-      </view>
-      <view class="children1" id="a3">
+      <view class="children1">
         <text class="title1">专享免减券</text>
-        <swiper class="couponList">
-      <swiper-item class="swiper_coupon">
-        <view class="coupon"> </view>
-        <view class="coupon"> </view>
-        <view class="coupon"> </view>
-      </swiper-item>
-      <swiper-item class="swiper_coupon">
-        <view class="coupon"> </view>
-        <view class="coupon"> </view>
-        <view class="coupon"> </view>
-      </swiper-item>
-        </swiper>
+
       </view>
-      <view class="children1" id="a4">
-        <text class="title1">尊享折扣</text>
+      <view class="children1">
+        <text class="title1">抽优惠券</text>
       </view>
     </view>
   </view>
