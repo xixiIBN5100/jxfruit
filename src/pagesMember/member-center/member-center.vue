@@ -18,7 +18,6 @@ const showToast = () => {
     content: '当前该等级会员: ' + memberInfomation.value.requirement + '\n' +memberInfomation.value.treatment
   })
 }
-
 const variable = ref() // 初始化变量
 memberInfo
   .then((result) => {
