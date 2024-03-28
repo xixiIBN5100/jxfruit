@@ -177,6 +177,12 @@
             "style": {
               "navigationBarTitleText": "购物券管理页面"
             }
+          },
+          {
+            "path": "newGoods/newGoods",
+            "style": {
+              "navigationBarTitleText": "新商品创建页面"
+            }
           }
 			]
 		},
