@@ -9,7 +9,7 @@ import { computed, ref, watch, onMounted } from 'vue'
 // import ScalePanel from '../../components/ScalePanel.vue'
 import { useMemberStore } from '@/stores'
 const scrolltolower = () => {
-  console.log("下拉")
+  console.log('下拉')
   // activeIndex.value = activeIndex.value + 1
 }
 
@@ -25,20 +25,20 @@ enum SkuMode {
 const navList = [
   {
     id: 1,
-    name: '鲜果专区'
+    name: '鲜果专区',
   },
   {
     id: 2,
-    name: '今日特价'
+    name: '今日特价',
   },
   {
     id: 3,
-    name: '山姆代购'
+    name: '山姆代购',
   },
   {
     id: 4,
     name: '活动商品',
-  }
+  },
 ]
 
 // 获取商品详情信息
@@ -46,7 +46,7 @@ const goods = ref<GoodsResult>()
 const getGoodsByIdData = async (id: number) => {
   const res = await getGoodsById(id)
   goods.value = res.data
-  console.log("goodsValue", goods.value)
+  console.log('goodsValue', goods.value)
 }
 
 const add = async (item) => {
@@ -56,11 +56,11 @@ const add = async (item) => {
   } else {
     uni.showToast({
       title: '请先登录',
-      icon: 'error'
+      icon: 'error',
     })
     setTimeout(() => {
       uni.navigateTo({
-        url: '/pages/login/login'
+        url: '/pages/login/login',
       })
     }, 1000)
   }
@@ -87,11 +87,16 @@ const activeIndex = ref(0)
 const getCategoryTopData = async () => {
   const res = await getCategoryTop()
   categoryList.value = res.data
-  console.log(res.data);
+  categoryList.value.push({
+    category: '创建新商品',
+    id: 0,
+    list: [],
+  })
+  console.log(res.data)
 }
 
 onReachBottom(() => {
-  console.log("下拉到底了")
+  console.log('下拉到底了')
 })
 
 const navName = ref<string>()
@@ -100,19 +105,18 @@ const navName = ref<string>()
 const isFinish = ref(false)
 // 页面加载
 onLoad(async () => {
-  await Promise.all([ getCategoryTopData()])
-  const type = uni.getStorageSync("type")
-  console.log("type", type)
-  if (type != undefined && type != "") {
+  await Promise.all([getCategoryTopData()])
+  const type = uni.getStorageSync('type')
+  console.log('type', type)
+  if (type != undefined && type != '') {
     navName.value = navList[Number(type)].name
-  }
-  else {
+  } else {
     navName.value = navList[0].name
-    console.log("navName", navName.value)
+    console.log('navName', navName.value)
   }
-  activeIndex.value = categoryList.value.findIndex(item => item.category === navName.value)
+  activeIndex.value = categoryList.value.findIndex((item) => item.category === navName.value)
   isFinish.value = true
-  uni.removeStorageSync("type")
+  uni.removeStorageSync('type')
 })
 
 const nav = (item) => {
@@ -129,6 +133,13 @@ const query = defineProps<{
 const subCategoryList = computed(() => {
   return categoryList.value[activeIndex.value]?.list || []
 })
+
+const toNewGoods = (name: string) => {
+  if (name == '创建新商品')
+    uni.navigateTo({
+      url: '/pagesAdmin/newGoods/newGoods',
+    })
+}
 </script>
 
 <template>
@@ -144,24 +155,23 @@ const subCategoryList = computed(() => {
           :class="{ active: index === activeIndex }"
           @tap="activeIndex = index"
         >
-          <text class="name">
+          <text class="name" @tap="toNewGoods(item.category)">
             {{ item.category }}
           </text>
         </view>
       </scroll-view>
       <!-- 右侧：二级分类 -->
-      <scroll-view enable-back-to-top class="secondary"
-                   scroll-y
-                   @scrolltolower="scrolltolower"
-      >
+      <scroll-view enable-back-to-top class="secondary" scroll-y @scrolltolower="scrolltolower">
         <!-- 内容区域 -->
         <view class="panel">
           <view class="title">
             <text class="name">{{ categoryList[activeIndex].category }}</text>
             <!-- <navigator class="more" hover-class="none">全部</navigator> -->
           </view>
-          <view class="section" >
-            <view v-for="item in subCategoryList" :key="item.id"
+          <view class="section">
+            <view
+              v-for="item in subCategoryList"
+              :key="item.id"
               class="goods"
               @click.stop="nav(item)"
             >
@@ -181,10 +191,10 @@ const subCategoryList = computed(() => {
     </view>
     <!-- uni-ui 弹出层 -->
   </view>
-<!--  <PageSkeleton v-else />-->
-<!--  <uni-popup ref="popup" type="bottom" background-color="#fff">-->
-<!--    <ScalePanel ref="scale" :mode="mode" :goodsInfo="goods" v-if="popupName === 'scale'" @close="popup?.close()" />-->
-<!--  </uni-popup>-->
+  <!--  <PageSkeleton v-else />-->
+  <!--  <uni-popup ref="popup" type="bottom" background-color="#fff">-->
+  <!--    <ScalePanel ref="scale" :mode="mode" :goodsInfo="goods" v-if="popupName === 'scale'" @close="popup?.close()" />-->
+  <!--  </uni-popup>-->
 </template>
 
 <style lang="scss" scoped>
@@ -326,5 +336,4 @@ page {
     }
   }
 }
-
 </style>

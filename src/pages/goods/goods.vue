@@ -3,42 +3,42 @@ import type {
   SkuPopupEvent,
   SkuPopupInstance,
   SkuPopupLocaldata,
-} from '@/components/vk-data-goods-sku-popup/vk-data-goods-sku-popup'
-import { postMemberCart } from '@/services/cart'
-import { getGoodsById, getSkuInfo } from '@/services/goods'
-import { getAddress } from '@/services/address'
-import type { CartItem } from '@/types/cart'
-import type { GoodsItem, GoodsResult, SkuItem, GoodsImageItem } from '@/types/goods'
-import type { AddressItem } from '@/types/address'
-import { onLoad } from '@dcloudio/uni-app'
-import { computed, ref, onMounted} from 'vue'
-import AddressPanel from './components/AddressPanel.vue'
-import ServicePanel from './components/ServicePanel.vue'
-import SharingPanel from './components/SharingPanel.vue'
-import ScalePanel from './components/ScalePanel.vue'
-import { profile } from 'console'
+} from "@/components/vk-data-goods-sku-popup/vk-data-goods-sku-popup";
+import { postMemberCart } from "@/services/cart";
+import { getGoodsById, getSkuInfo } from "@/services/goods";
+import { getAddress } from "@/services/address";
+import type { CartItem } from "@/types/cart";
+import type { GoodsItem, GoodsResult, SkuItem, GoodsImageItem } from "@/types/goods";
+import type { AddressItem } from "@/types/address";
+import { onLoad } from "@dcloudio/uni-app";
+import { computed, ref, onMounted } from "vue";
+import AddressPanel from "./components/AddressPanel.vue";
+import ServicePanel from "./components/ServicePanel.vue";
+import SharingPanel from "./components/SharingPanel.vue";
+import ScalePanel from "./components/ScalePanel.vue";
+import { profile } from "console";
 // 获取屏幕边界到安全区域距离
-const { safeAreaInsets } = uni.getSystemInfoSync()
-import { useMemberStore } from '@/stores'
+const { safeAreaInsets } = uni.getSystemInfoSync();
+import { useMemberStore } from "@/stores";
 // 接收页面参数
 const query = defineProps<{
-  id: string,
-  userId: string
-}>()
+  id: string;
+  userId: string;
+}>();
 
 const selectAddress = (address) => {
-  console.log(address)
-  selectedAddress.value = address
-}
+  console.log(address);
+  selectedAddress.value = address;
+};
 
-var selectedAddress = ref<AddressItem>()
+var selectedAddress = ref<AddressItem>();
 
 // 获取商品详情信息
-const goods = ref<GoodsResult>()
+const goods = ref<GoodsResult>();
 const getGoodsByIdData = async () => {
-  console.log(query.id)
-  const res = await getGoodsById(query.id)
-  goods.value = res.data
+  console.log(query.id);
+  const res = await getGoodsById(query.id);
+  goods.value = res.data;
   // SKU组件所需格式
   // localdata.value = {
   //   _id: res.data.id,
@@ -46,93 +46,90 @@ const getGoodsByIdData = async () => {
   //   price: res.data.price,
   //   imgUrl: res.data.imgUrl
   // }
-}
+};
 
 // 页面加载
 onLoad(() => {
-  const memberStore = useMemberStore()
-  console.log(query.userId)
-  getGoodsByIdData()
+  const memberStore = useMemberStore();
+  console.log(query.userId);
+  getGoodsByIdData();
   if (memberStore.profile) {
-    getUserAddress()
+    getUserAddress();
   }
-  getGoodsScaleList()
-})
+  getGoodsScaleList();
+});
 
-
-
-const address = ref<AddressItem[]>()
+const address = ref<AddressItem[]>();
 
 const getUserAddress = async () => {
-  const res = await getAddress()
-  console.log(res.data)
-  address.value = res.data
-}
+  const res = await getAddress();
+  console.log(res.data);
+  address.value = res.data;
+};
 
-const sku = ref<SkuItem[]>()
+const sku = ref<SkuItem[]>();
 const getGoodsScaleList = async () => {
-  const res = await getSkuInfo(query.id)
-  sku.value = res.data
-}
+  const res = await getSkuInfo(query.id);
+  sku.value = res.data;
+};
 
 // 轮播图变化时
-const currentIndex = ref(0)
+const currentIndex = ref(0);
 const onChange: UniHelper.SwiperOnChange = (ev) => {
-  console.log(ev.detail.current)
-  currentIndex.value = ev.detail.current
-}
+  console.log(ev.detail.current);
+  currentIndex.value = ev.detail.current;
+};
 
 // 点击图片时
 const onTapImage = (url: string) => {
   // 大图预览
   uni.previewImage({
     current: url,
-    urls: goods.value!.images.map(item => item.imgUrl)
-  })
-}
+    urls: goods.value!.images.map((item) => item.imgUrl),
+  });
+};
 
 // uni-ui 弹出层组件 ref
 const popup = ref<{
-  open: (type?: UniHelper.UniPopupType) => void
-  close: () => void
-}>()
+  open: (type?: UniHelper.UniPopupType) => void;
+  close: () => void;
+}>();
 
 // 弹出层条件渲染
-const popupName = ref<'address' | 'service' | 'scale' | 'share'>()
+const popupName = ref<"address" | "service" | "scale" | "share">();
 const openPopup = (name: typeof popupName.value) => {
   // 修改弹出层名称
-  popupName.value = name
-  popup.value?.open()
-}
+  popupName.value = name;
+  popup.value?.open();
+};
 // 是否显示SKU组件
-const isShowSku = ref(false)
+const isShowSku = ref(false);
 // 商品信息
-const localdata = ref({} as SkuPopupLocaldata)
+const localdata = ref({} as SkuPopupLocaldata);
 // 按钮模式
 enum SkuMode {
   Both = 1,
   Cart = 2,
   Buy = 3,
 }
-var mode = ref<SkuMode>(SkuMode.Cart)
+var mode = ref<SkuMode>(SkuMode.Cart);
 // 打开SKU弹窗修改按钮模式
 const openSkuPopup = (val: SkuMode) => {
-  popupName.value = 'scale',
-  popup.value?.open()
+  (popupName.value = "scale"), popup.value?.open();
   // // 显示SKU弹窗
   // isShowSku.value = true
   // // 修改按钮模式
-  mode.value = val
-}
+  mode.value = val;
+};
 
-const childComponentRef = ref(null)
+const childComponentRef = ref(null);
 
 // SKU组件实例
-const skuPopupRef = ref<SkuPopupInstance>()
+const skuPopupRef = ref<SkuPopupInstance>();
 // 计算被选中的值
 const selectArrText = computed(() => {
-  return skuPopupRef.value?.selectArr?.join(' ').trim() || '请选择商品规格'
-})
+  return skuPopupRef.value?.selectArr?.join(" ").trim() || "请选择商品规格";
+});
 // // 加入购物车事件
 // const onAddCart = async (ev: CartItem) => {
 //   await postMemberCart({ id: ev.id, count: ev.num })
@@ -145,30 +142,32 @@ const selectArrText = computed(() => {
 // }
 
 const toComment = (id: string) => {
-  uni.navigateTo({url: `/pagesOrder/comment/comment?goodsId=${id}`})
-}
+  uni.navigateTo({ url: `/pagesOrder/comment/comment?goodsId=${id}` });
+};
 
 const addCart = () => {
-  console.log("goods")
-  if (goods.value?.goodsInfo.onShelf !== 0) { openSkuPopup(SkuMode.Cart) }
-  else {  
+  console.log("goods");
+  if (goods.value?.goodsInfo.onShelf !== 0) {
+    openSkuPopup(SkuMode.Cart);
+  } else {
     uni.showToast({
-      title: '该商品已下架',
-      icon: 'none'
-    })
+      title: "该商品已下架",
+      icon: "none",
+    });
   }
-}
+};
 
 const buyNow = () => {
-  console.log("goods")
-  if (goods.value?.goodsInfo.onShelf !== 0) { openSkuPopup(SkuMode.Buy) }
-  else {  
+  console.log("goods");
+  if (goods.value?.goodsInfo.onShelf !== 0) {
+    openSkuPopup(SkuMode.Buy);
+  } else {
     uni.showToast({
-      title: '该商品已下架',
-      icon: 'none'
-    })
+      title: "该商品已下架",
+      icon: "none",
+    });
   }
-}
+};
 </script>
 
 <template>
@@ -179,7 +178,12 @@ const buyNow = () => {
       <view class="preview">
         <swiper @change="onChange">
           <swiper-item v-for="item in goods?.images">
-            <image @click="onTapImage" class="image"  mode="aspectFill" :src="item?.imgUrl"  />
+            <image
+              @click="onTapImage"
+              class="image"
+              mode="aspectFill"
+              :src="item?.imgUrl"
+            />
             <!-- <image class="fruit-logo" src="../../static/images/logo.jpg"></image> -->
           </swiper-item>
         </swiper>
@@ -198,21 +202,24 @@ const buyNow = () => {
           <view class="share-btn" @click="openPopup('share')"></view>
         </view>
         <view class="name ellipsis">{{ goods?.goodsInfo.goodsName }}</view>
-        <view class="desc"> {{ goods?.goodsInfo.description }} </view>       
+        <view class="desc"> {{ goods?.goodsInfo.description }} </view>
       </view>
       <!-- 操作面板 -->
       <view class="action">
-        <view @tap="openSkuPopup(SkuMode.Both);" class="item arrow">
+        <view @tap="openSkuPopup(SkuMode.Both)" class="item arrow">
           <text class="label">选择</text>
           <text class="text ellipsis"> {{ selectArrText }} </text>
         </view>
         <view @tap="openPopup('address')" class="item arrow">
           <text class="label">送至</text>
-          <text class="text ellipsis">  {{ selectedAddress?.campus || '请选择收获地址'}} {{ selectedAddress?.roomAddress }}  </text>
+          <text class="text ellipsis">
+            {{ selectedAddress?.campus || "请选择收获地址" }}
+            {{ selectedAddress?.roomAddress }}
+          </text>
         </view>
         <view @tap="openPopup('service')" class="item arrow">
           <text class="label">服务</text>
-          <text class="text ellipsis">  破损包退 最优质的售后服务 </text>
+          <text class="text ellipsis"> 破损包退 最优质的售后服务 </text>
         </view>
       </view>
     </view>
@@ -220,28 +227,32 @@ const buyNow = () => {
     <!-- 商品详情 -->
     <view class="detail panel">
       <view class="title" @tap="toComment(query.id)">
-        <text class="item arrow">评论 {{ goods?.commentNum }}
+        <text class="item arrow"
+          >评论 {{ goods?.commentNum }}
           <text class="all">查看全部</text>
         </text>
       </view>
       <view class="comment">
-        <template v-for="(item, index) in goods?.comments.slice(0,3)" :key="index">
+        <template v-for="(item, index) in goods?.comments.slice(0, 3)" :key="index">
           <view>
             <view class="purchaser">
-              <img class="avatar" :src="item.avatarUrl" alt="">
+              <img class="avatar" :src="item.avatarUrl" alt="" />
               <text class="name">{{ item.publisher }}</text>
             </view>
             <view class="content">{{ item.content }}</view>
           </view>
         </template>
       </view>
-      <view style="height: 200rpx">
-      </view>
+      <view style="height: 200rpx"> </view>
     </view>
   </scroll-view>
 
   <!-- 用户操作 -->
-  <view v-if="goods" class="toolbar" :style="{ paddingBottom: safeAreaInsets?.bottom + 'px' }">
+  <view
+    v-if="goods"
+    class="toolbar"
+    :style="{ paddingBottom: safeAreaInsets?.bottom + 'px' }"
+  >
     <view class="icons">
       <button class="icons-button"><text class="icon-heart"></text>收藏</button>
       <!-- #ifdef MP-WEIXIN -->
@@ -254,26 +265,46 @@ const buyNow = () => {
       </navigator>
     </view>
     <view class="buttons">
-      <view class="addcart" :class="[ goods?.goodsInfo.onShelf === 0 ? 'under-shelf': '' ]"
-        @click="addCart"> 
-        加入购物车 
+      <view
+        class="addcart"
+        :class="[goods?.goodsInfo.onShelf === 0 ? 'under-shelf' : '']"
+        @click="addCart"
+      >
+        加入购物车
       </view>
-      <view class="payment" :class="[ goods?.goodsInfo.onShelf === 0 ? 'under-shelf': '' ]" 
-        @click="buyNow"> 
-        立即购买 
+      <view
+        class="payment"
+        :class="[goods?.goodsInfo.onShelf === 0 ? 'under-shelf' : '']"
+        @click="buyNow"
+      >
+        立即购买
       </view>
     </view>
   </view>
 
   <!-- uni-ui 弹出层 -->
   <uni-popup ref="popup" type="bottom" background-color="#fff">
-    <AddressPanel 
-    @selectAddress="selectAddress"
-    :addressList="address" v-if="popupName === 'address'" @close="popup?.close()" />
+    <AddressPanel
+      @selectAddress="selectAddress"
+      :addressList="address"
+      v-if="popupName === 'address'"
+      @close="popup?.close()"
+    />
     <ServicePanel v-if="popupName === 'service'" @close="popup?.close()" />
-    <ScalePanel ref="scale" :mode="mode" :goodsInfo="goods" v-if="popupName === 'scale'" @close="popup?.close()" />
-    <SharingPanel ref="share" :id="id" :mode="mode"  v-if="popupName === 'share'"
-     @close="popup?.close()"  :goodsInfo="goods"
+    <ScalePanel
+      ref="scale"
+      :mode="mode"
+      :goodsInfo="goods"
+      v-if="popupName === 'scale'"
+      @close="popup?.close()"
+    />
+    <SharingPanel
+      ref="share"
+      :id="id"
+      :mode="mode"
+      v-if="popupName === 'share'"
+      @close="popup?.close()"
+      :goodsInfo="goods"
     />
   </uni-popup>
 </template>
@@ -284,7 +315,7 @@ page {
   overflow: hidden;
   display: flex;
   flex-direction: column;
-} 
+}
 
 .viewport {
   background-color: #f4f4f4;
@@ -306,7 +337,7 @@ page {
       font-size: 28rpx;
       color: #333;
       font-weight: 600;
-      border-left: 4rpx solid rgb(255,234,189);
+      border-left: 4rpx solid rgb(255, 234, 189);
     }
     navigator {
       font-size: 24rpx;
@@ -323,7 +354,7 @@ page {
   height: 50rpx;
   text-align: center;
   line-height: 50rpx;
-  background-image: url('https://image.familystudy.cn/image/jxfruit/share.webp');
+  background-image: url("https://image.familystudy.cn/image/jxfruit/share.webp");
   background-size: contain;
 }
 
@@ -332,14 +363,14 @@ page {
     position: absolute;
     top: 50%;
     right: 30rpx;
-    content: '\e6c2';
+    content: "\e6c2";
     color: #ccc;
-    font-family: 'erabbit' !important;
+    font-family: "erabbit" !important;
     font-size: 32rpx;
     transform: translateY(-50%);
   }
 
-  .all{
+  .all {
     position: absolute;
     right: 70rpx;
     font-weight: normal;
@@ -365,7 +396,6 @@ page {
       height: 300rpx;
       bottom: 400rpx;
       left: 30rpx;
-
     }
     .indicator {
       height: 40rpx;
@@ -399,7 +429,7 @@ page {
       color: rgb(255, 0, 0);
       font-size: 34rpx;
       box-sizing: border-box;
-      background-color: rgb(255,234,189);
+      background-color: rgb(255, 234, 189);
     }
     .number {
       font-size: 56rpx;
@@ -462,7 +492,6 @@ page {
     .image {
       width: 100%;
     }
-    
   }
   .properties {
     padding: 0 20rpx;
@@ -525,7 +554,6 @@ page {
   }
 }
 
-
 .comment {
   padding-left: 20rpx;
   .purchaser {
@@ -547,7 +575,6 @@ page {
     font-size: 28rpx;
   }
 }
-
 
 /* 底部工具栏 */
 .toolbar {
@@ -573,15 +600,13 @@ page {
       font-size: 26rpx;
       color: #fff;
       border-radius: 72rpx;
-
-      
     }
     .addcart {
-      background-color: rgb(255,234,189);
+      background-color: rgb(255, 234, 189);
       color: black;
     }
     .payment {
-      background-color: #ffa868;  
+      background-color: #ffa868;
       margin-left: 20rpx;
       color: black;
     }

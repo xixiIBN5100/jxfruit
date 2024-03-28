@@ -11,25 +11,37 @@ import type { CartItem } from '@/types/cart'
 import type { GoodsItem, GoodsResult, SkuItem, GoodsImageItem } from '@/types/goods'
 import type { AddressItem } from '@/types/address'
 import { onLoad } from '@dcloudio/uni-app'
-import { computed, ref, onMounted} from 'vue'
-import{updateGood, deleteById, setOnShelf} from "@/services/adminGoods";
-import { profile } from 'console'
+import { computed, ref, onMounted, reactive } from 'vue'
+import {
+  updateGood,
+  deleteById,
+  setOnShelf,
+  deletImage,
+  updateScale,
+  deleteScale,
+} from '@/services/adminGoods'
 // import uni from '@dcloudio/vite-plugin-uni'
 // 获取屏幕边界到安全区域距离
 const { safeAreaInsets } = uni.getSystemInfoSync()
 import { useMemberStore } from '@/stores'
+import type { newScale } from '@/types/goods'
+import { addScale } from '../../services/adminGoods'
 // 接收页面参数
 const query = defineProps<{
-  id: string,
+  id: string
   userId: string
 }>()
-
+const newScaleData = ref<newScale>({ scale: '', price: 0, totalInventory: 0, attribute: '' })
+const state = reactive({
+  popup: ref(null),
+})
+const newScalePop = ref(null)
 const selectAddress = (address) => {
   console.log(address)
   selectedAddress.value = address
 }
 
-var selectedAddress = ref<AddressItem>()
+var selectedAddress = ref<AddressItem>({})
 const onShelf = ref(0)
 // 获取商品详情信息
 const goods = ref<GoodsResult>()
@@ -46,19 +58,13 @@ const getGoodsByIdData = async () => {
   //   imgUrl: res.data.imgUrl
   // }
 }
-
 // 页面加载
 onLoad(() => {
   const memberStore = useMemberStore()
   console.log(query.userId)
   getGoodsByIdData()
-  if (memberStore.profile) {
-    getUserAddress()
-  }
   getGoodsScaleList()
 })
-
-
 
 const address = ref<AddressItem[]>()
 
@@ -68,7 +74,6 @@ const address = ref<AddressItem[]>()
 //   address.value = res.data
 // }
 
-const sku = ref<SkuItem[]>()
 const getGoodsScaleList = async () => {
   const res = await getSkuInfo(query.id)
   sku.value = res.data
@@ -86,23 +91,10 @@ const onTapImage = (url: string) => {
   // 大图预览
   uni.previewImage({
     current: url,
-    urls: goods.value!.images.map(item => item.imgUrl)
+    urls: goods.value!.images.map((item) => item.imgUrl),
   })
 }
 
-// uni-ui 弹出层组件 ref
-const popup = ref<{
-  open: (type?: UniHelper.UniPopupType) => void
-  close: () => void
-}>()
-
-// 弹出层条件渲染
-const popupName = ref<'address' | 'service' | 'scale' | 'share'>()
-const openPopup = (name: typeof popupName.value) => {
-  // 修改弹出层名称
-  popupName.value = name
-  popup.value?.open()
-}
 // 是否显示SKU组件
 const isShowSku = ref(false)
 // 商品信息
@@ -114,29 +106,19 @@ enum SkuMode {
   Buy = 3,
 }
 var mode = ref<SkuMode>(SkuMode.Cart)
-// 打开SKU弹窗修改按钮模式
-const openSkuPopup = (val: SkuMode) => {
-  popupName.value = 'scale',
-    popup.value?.open()
-  // // 显示SKU弹窗
-  // isShowSku.value = true
-  // // 修改按钮模式
-  mode.value = val
-}
-
 const childComponentRef = ref(null)
 // SKU组件实例
 const skuPopupRef = ref<SkuPopupInstance>()
 
 const toComment = (id: string) => {
-  uni.navigateTo({url: `/pagesOrder/comment/comment?goodsId=${id}`})
+  uni.navigateTo({ url: `/pagesOrder/comment/comment?goodsId=${id}` })
 }
 
 const saveChanges = () => {
   console.log(goods.value)
   const data = goods.value
   updateGood(data.goodsInfo).then((res) => {
-    if(res.msg==="success"){
+    if (res.msg === 'success') {
       uni.showToast({
         title: '保存成功!',
         icon: 'success',
@@ -152,8 +134,8 @@ const changeShelf = async () => {
     id: goods.value.goodsInfo.id,
     state: state,
   }).then((r) => {
-    console.log(r);
-    if(r.msg==="success"){
+    console.log(r)
+    if (r.msg === 'success') {
       uni.showToast({
         title: '操作成功!',
         icon: 'success',
@@ -166,28 +148,182 @@ const changeShelf = async () => {
 
 const deleteGood = async () => {
   uni.showModal({
-
     title: '提示',
     // 提示文字
-    content: '确认删除该条信息吗？',
+    content: '确认删除该商品吗？',
     // 取消按钮的文字自定义
-    cancelText: "取消",
+    cancelText: '取消',
     // 确认按钮的文字自定义
-    confirmText: "删除",
+    confirmText: '删除',
     //删除字体的颜色
-    confirmColor:'red',
+    confirmColor: 'red',
     //取消字体的颜色
-    cancelColor:'#000000',
-    success: function(res) {
+    cancelColor: '#000000',
+    success: function (res) {
       if (res.confirm) {
-
+        deleteById(goods.value.goodsInfo.id).then((res) => {
+          if (res.msg === 'success') {
+            uni.showToast({
+              title: '删除成功!',
+              icon: 'success',
+              duration: 2000,
+            })
+            uni.navigateBack()
+          } else {
+            uni.showToast({
+              title: '删除失败!',
+              icon: 'none',
+              duration: 2000,
+            })
+          }
+        })
       }
-        // const res = deleteById(goods.value.goodsInfo.id);
-        //
-      }
-    })
-  }
+    },
+  })
+}
 
+const deletImageById = (id: number) => {
+  console.log(id)
+  uni.showModal({
+    title: '提示',
+    content: '确认删除该图片吗？',
+    success: function (res) {
+      if (res.confirm) {
+        deletImage(id).then((res) => {
+          if (res.msg === 'success') {
+            uni.showToast({
+              title: '删除成功!',
+              icon: 'success',
+              duration: 2000,
+            })
+            goods.value.images = goods.value.images.filter((item) => item.id !== id)
+          } else {
+            uni.showToast({
+              title: '删除失败!',
+              icon: 'none',
+              duration: 2000,
+            })
+          }
+        })
+      }
+    },
+  })
+}
+const addImage = () => {
+  uni.chooseImage({
+    count: 1,
+    sizeType: ['original', 'compressed'],
+    sourceType: ['album', 'camera'],
+    success: function (res) {
+      console.log(res)
+      const tempFilePaths = res.tempFilePaths
+      uni.uploadFile({
+        url: `/goods/admin/add/image/${goods.value.goodsInfo.id}`,
+        filePath: tempFilePaths[0],
+        name: 'file',
+        success: function (res) {
+          const data = JSON.parse(res.data)
+          console.log(data)
+          if (data.msg === 'success') {
+            uni.showToast({
+              title: '上传成功!',
+              icon: 'success',
+              duration: 2000,
+            })
+            goods.value.images.push(data.data.imgs[0])
+            console.log(goods.value.images)
+          } else {
+            uni.showToast({
+              title: '上传失败!',
+              icon: 'none',
+              duration: 2000,
+            })
+          }
+        },
+      })
+    },
+  })
+}
+
+const deletScaleById = (id: number) => {
+  console.log(id)
+  uni.showModal({
+    title: '提示',
+    content: '确认删除该规格吗？',
+    success: function (res) {
+      if (res.confirm) {
+        deleteScale(id).then((res) => {
+          if (res.msg === 'success') {
+            uni.showToast({
+              title: '删除成功!',
+              icon: 'success',
+              duration: 2000,
+            })
+            goods.value.skus = goods.value?.skus.filter((item) => item.id !== id)
+          } else {
+            uni.showToast({
+              title: '删除失败!',
+              icon: 'none',
+              duration: 2000,
+            })
+          }
+        })
+      }
+    },
+  })
+}
+
+const changeScale = (id: number) => {
+  console.log(id)
+  const data = goods.value.skus.find((item) => item.id === id)
+  console.log(data)
+  updateScale(data).then((res) => {
+    if (res.msg === 'success') {
+      uni.showToast({
+        title: '修改成功!',
+        icon: 'success',
+        duration: 2000,
+      })
+    } else {
+      uni.showToast({
+        title: '修改失败!',
+        icon: 'none',
+        duration: 2000,
+      })
+    }
+  })
+}
+
+const popNewScale = () => {
+  //弹出新建规格弹窗
+  console.log(newScalePop)
+  newScalePop.value.open()
+}
+const comfimNewScale = (id: number) => {
+  console.log(newScaleData)
+  addScale(id, newScaleData.value).then((res) => {
+    if (res.msg === 'success') {
+      uni.showToast({
+        title: '新建成功!',
+        icon: 'success',
+        duration: 2000,
+      })
+      //添加到当前商品的规格列表
+      goods.value.skus.push(newScaleData.value)
+
+      newScalePop.value.close()
+    } else {
+      uni.showToast({
+        title: '新建失败!',
+        icon: 'none',
+        duration: 2000,
+      })
+    }
+  })
+}
+onMounted(() => {
+  console.log(newScalePop)
+})
 </script>
 
 <template>
@@ -198,7 +334,13 @@ const deleteGood = async () => {
       <view class="preview">
         <swiper @change="onChange">
           <swiper-item v-for="item in goods?.images">
-            <image @click="onTapImage" class="image"  mode="aspectFill" :src="item?.imgUrl"  />
+            <image
+              @longpress="deletImageById(item.id)"
+              @click="onTapImage"
+              class="image"
+              mode="aspectFill"
+              :src="item?.imgUrl"
+            />
             <!-- <image class="fruit-logo" src="../../static/images/logo.jpg"></image> -->
           </swiper-item>
         </swiper>
@@ -214,45 +356,66 @@ const deleteGood = async () => {
         <view class="price">
           <text class="symbol">¥</text>
           <input :type="number" v-model.number="goods.goodsInfo.price" />
-          <view class="share-btn" @click="openPopup('share')"></view>
         </view>
         <input class="name ellipsis" v-model="goods.goodsInfo.goodsName" />
-        <input  class="desc" v-model="goods.goodsInfo.description" />
+        <textarea class="desc" v-model="goods.goodsInfo.description" />
       </view>
       <!-- 操作面板 -->
     </view>
 
     <!-- 商品详情 -->
     <view class="detail panel">
-      <view class="title" @tap="toComment(query.id)">
-        <text class="item arrow">评论 {{ goods?.commentNum }}
-          <text class="all">查看全部</text>
-        </text>
+      <view class="title">
+        <button type="primary" @click="addImage">添加图片</button>
+        <button type="primary" @click="popNewScale">添加规格</button>
       </view>
-      <view class="comment">
-        <template v-for="(item, index) in goods?.comments.slice(0,3)" :key="index">
-          <view>
-            <view class="purchaser">
-              <img class="avatar" :src="item.avatarUrl" alt="">
-              <text class="name">{{ item.publisher }}</text>
-            </view>
-            <view class="content">{{ item.content }}</view>
+      <view class="scale">
+        <div class="item" v-for="item in goods?.skus" :key="item.id">
+          <text class="label">规格：</text>
+          <input class="value" v-model="item.scale" />
+          <text class="label">单价：</text>
+          <input class="value" v-model="item.price" />
+          <text class="label">总库存：</text>
+          <input class="value" v-model="item.totalInventory" />
+          <text class="label">说明：</text>
+          <textarea class="text" v-model="item.attribute" />
+          <div class="button">
+            <button type="primary" @click="changeScale(item.id)">修改该规格</button>
+            <button type="warn" @click="deletScaleById(item.id)">删除该规格</button>
+          </div>
+        </div>
+      </view>
+      <uni-popup ref="newScalePop" type="center">
+        <view class="popup-content">
+          <view class="form-item">
+            <text class="label">规格：</text>
+            <input class="value" v-model="newScaleData.scale" />
           </view>
-        </template>
-      </view>
-      <view style="height: 200rpx">
-      </view>
+          <view class="form-item">
+            <text class="label">价格：</text>
+            <input class="value" v-model="newScaleData.price" />
+          </view>
+          <view class="form-item">
+            <text class="label">总库存：</text>
+            <input class="value" v-model="newScaleData.totalInventory" />
+          </view>
+          <view class="form-item">
+            <text class="label">说明：</text>
+            <input style="width: 100px" v-model="newScaleData.attribute" />
+          </view>
+          <view class="button">
+            <button type="primary" @click="comfimNewScale(goods?.goodsInfo.id)">确认新建</button>
+          </view>
+        </view>
+      </uni-popup>
+      <view style="height: 200rpx"> </view>
     </view>
   </scroll-view>
 
   <view v-if="goods" class="toolbar" :style="{ paddingBottom: safeAreaInsets?.bottom + 'px' }">
     <view class="buttons">
-      <view class="payment" @tap="deleteGood()">
-        删除
-      </view>
-      <view class="payment" @tap="saveChanges()">
-        保存
-      </view>
+      <view class="payment" @tap="deleteGood()"> 删除 </view>
+      <view class="payment" @tap="saveChanges()"> 保存 </view>
       <view class="payment" @tap="changeShelf()">
         {{ onShelf ? '下架' : '上架' }}
       </view>
@@ -272,28 +435,51 @@ page {
   background-color: #f4f4f4;
 }
 
+.popup-content {
+  background-color: #f4f4f4;
+  height: 300px;
+  width: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  //圆角
+  border-radius: 20px;
+  .item {
+    width: 100%;
+    padding: 20rpx;
+    border-bottom: 1rpx solid #eaeaea;
+    .label {
+      font-size: 26rpx;
+      color: #333;
+    }
+    .value {
+      width: 100px;
+      height: 60rpx;
+      font-size: 26rpx;
+      color: #333;
+    }
+    .text {
+      height: 30px;
+      width: 250px;
+      font-size: 26rpx;
+      color: #333;
+    }
+  }
+}
+
 .panel {
   margin-top: 20rpx;
   background-color: #fff;
   .title {
     display: flex;
-    justify-content: space-between;
+    justify-content: space-around;
     align-items: center;
     height: 90rpx;
-    line-height: 1;
-    padding: 30rpx 60rpx 30rpx 6rpx;
-    position: relative;
-    text {
-      padding-left: 10rpx;
-      font-size: 28rpx;
-      color: #333;
-      font-weight: 600;
-      border-left: 4rpx solid rgb(255,234,189);
-    }
-    navigator {
-      font-size: 24rpx;
-      color: #666;
-    }
+  }
+  .button {
+    padding-top: 20px;
+    padding-left: -10px;
   }
 }
 
@@ -321,7 +507,7 @@ page {
     transform: translateY(-50%);
   }
 
-  .all{
+  .all {
     position: absolute;
     right: 70rpx;
     font-weight: normal;
@@ -347,7 +533,6 @@ page {
       height: 300rpx;
       bottom: 400rpx;
       left: 30rpx;
-
     }
     .indicator {
       height: 40rpx;
@@ -381,7 +566,7 @@ page {
       color: rgb(255, 0, 0);
       font-size: 34rpx;
       box-sizing: border-box;
-      background-color: rgb(255,234,189);
+      background-color: rgb(255, 234, 189);
     }
     .number {
       font-size: 56rpx;
@@ -444,7 +629,6 @@ page {
     .image {
       width: 100%;
     }
-
   }
   .properties {
     padding: 0 20rpx;
@@ -507,29 +691,44 @@ page {
   }
 }
 
-
-.comment {
-  padding-left: 20rpx;
-  .purchaser {
-    font-weight: 700;
-    .avatar {
-      width: 80rpx;
-      height: 80rpx;
-      border-radius: 50%;
+.scale {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  //竖着排列，每列占一行
+  .item {
+    width: 100%;
+    padding: 20rpx;
+    border-bottom: 1rpx solid #eaeaea;
+    .label {
+      font-size: 26rpx;
+      color: #333;
+    }
+    .value {
+      width: 100px;
+      height: 60rpx;
+      font-size: 26rpx;
+      color: #333;
+    }
+    .text {
+      height: 30px;
+      width: 250px;
+      font-size: 26rpx;
+      color: #333;
     }
   }
-  .name {
-    font-size: 28rpx;
-    margin-left: 20rpx;
-  }
-  .content {
-    padding-left: 20rpx;
-    padding-right: 20rpx;
-    margin-top: 10rpx;
-    font-size: 28rpx;
+  .button {
+    display: flex;
+    justify-content: space-around;
+    button {
+      width: 200rpx;
+      height: 60rpx;
+      font-size: 26rpx;
+      color: #fff;
+      border-radius: 60rpx;
+    }
   }
 }
-
 
 /* 底部工具栏 */
 .toolbar {
@@ -555,11 +754,9 @@ page {
       font-size: 26rpx;
       color: #fff;
       border-radius: 72rpx;
-
-
     }
     .addcart {
-      background-color: rgb(255,234,189);
+      background-color: rgb(255, 234, 189);
       color: black;
     }
     .payment {
@@ -577,11 +774,10 @@ page {
     align-items: center;
     justify-content: center;
     // 兼容 H5 端和 App 端的导航链接样式
-    }
-    text {
-      display: block;
-      font-size: 34rpx;
-    }
   }
-
+  text {
+    display: block;
+    font-size: 34rpx;
+  }
+}
 </style>
