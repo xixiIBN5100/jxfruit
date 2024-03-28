@@ -45,11 +45,13 @@ const codeNo = ref<string>('')
 button {
   margin: 100rpx 300rpx 10rpx;
   height: 100rpx;
-  width: 150rpx;
+  width: 200rpx;
+  line-height: 100rpx;
   background-color: rgb(203, 243, 248);
   border-radius: 20px;
   border:3px solid rgb(44, 241, 255) ;
   font-weight: bold;
   color: rgb(29, 28, 29);
 }
+
 </style>

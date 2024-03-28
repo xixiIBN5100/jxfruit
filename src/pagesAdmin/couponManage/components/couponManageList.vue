@@ -217,7 +217,6 @@ const onScrolltolower = async () => {
         <view class="delete">
           <button @tap="onDelete(couponAdmin.id)" class="button delete-button" hover-class="button-hover">删除</button>
         </view>
-
       </view>
     </view>
 

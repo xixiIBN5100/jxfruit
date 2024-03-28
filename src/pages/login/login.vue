@@ -8,18 +8,23 @@
     <view class="login">
       <!-- 网页端表单登录 -->
       <!-- #ifdef H5 -->
-      <input v-model="form.account" class="input" type="text" placeholder="请输入用户名/手机号码" />
+      <input v-model="form.username" class="input" type="text" placeholder="请输入用户名/手机号码" />
       <input v-model="form.password" class="input" type="text" password placeholder="请输入密码" />
       <button @tap="onSubmit" class="button phone">登录</button>
       <!-- #endif -->
 
       <!-- 小程序端授权登录 -->
       <!-- #ifdef MP-WEIXIN -->
-      <button class="button phone" 
+      <button class="button phone" v-if="!admin"
       @tap="onGetphonenumber">
         <text class="icon"></text>
         一键登录/注册
       </button>
+      <view v-if="admin">
+        <input v-model="form.username" class="input" type="text" placeholder="请输入用户名" />
+        <input v-model="form.password" class="input" type="text" password placeholder="请输入密码" />
+        <button @tap="onSubmit" class="button phone">登录</button>
+      </view>
       <!-- #endif -->
 
       <!-- <view class="extra">
@@ -33,11 +38,14 @@
           </button>
         </view>
       </view> -->
-      <view class="tips"> 
+      <view class="tips">
         <checkbox-group class="check">
           <checkbox @tap="check"></checkbox>
         </checkbox-group>
         您已知晓并同意 <text class="content-link" @tap="jumpPrivacy">《小程序隐私保护指引》</text></view>
+    </view>
+    <view class="admin">
+      <text class="content-link" @tap="showAdmin">管理员登录</text>
     </view>
     <!-- #ifdef MP-WEIXIN -->
     <ws-wx-privacy id="privacy-popup"></ws-wx-privacy>
@@ -48,28 +56,30 @@
   import type { LoginResult, LoginParams, ProfileDetail } from '@/types/user'
   import { loginByPwd, loginByWechat, registerByWechat } from '@/services/login'
   import { useMemberStore } from '@/stores'
+import { useRoleStore } from '@/stores/index'
   export default{
     data(){
       return{
         approve: false,
+        admin: false,
         form: {
-          account: '13123456789',
+          username: '',
           password: ''
         }
       }
     },
     onLoad() {
-      // //#ifdef MP-WEIXIN        
-      // wx.requirePrivacyAuthorize({            
-      //   success: () => {                
-      //     console.log('点击同意');            
-      //   },            
-      //     fail: () => {                
-      //       console.log('点击拒绝');                            
-      //   },             
-      //     complete: () => {                
-      //       console.log('用户已点击');            
-      //   }       
+      // //#ifdef MP-WEIXIN
+      // wx.requirePrivacyAuthorize({
+      //   success: () => {
+      //     console.log('点击同意');
+      //   },
+      //     fail: () => {
+      //       console.log('点击拒绝');
+      //   },
+      //     complete: () => {
+      //       console.log('用户已点击');
+      //   }
       // })
     },
     methods:{
@@ -78,10 +88,11 @@
         this.approve= !this.approve
       },
       async onSubmit(){
-        // const res = await postLoginAPI(form.value)
-        // loginSuccess(res.result)
+        const res = await loginByPwd(this.form, 2)
+        this.onSuccess(res.data, 2)
       },
-      onSuccess(result: LoginResult) {
+
+      onSuccess(result: LoginResult, role: number) {
        // 保存会员信息
         var { userInfo } = result
         var { nickName, gender, grade, username, campus, avatarUrl, id } = userInfo
@@ -89,12 +100,17 @@
         console.log(profile)
         const memberStore = useMemberStore()
         memberStore.setProfile(profile)
+        const roleStore = useRoleStore()
+        roleStore.setRole(role)     
+        console.log("setRole", role)
+        console.log("getRole", roleStore.role)   
         // 成功提示
         uni.showToast({ icon: 'success', title: '登录成功' })
+
         setTimeout(() => {
             // 页面跳转
-          uni.navigateBack()
-        }, 500)
+            uni.navigateBack()
+          }, 500)
       },
 
       jumpPrivacy() {
@@ -102,6 +118,10 @@
           success: () => {}, // 打开成功
           fail: () => {}, // 打开失败
         })
+      },
+
+      showAdmin() {
+        this.admin = !this.admin
       },
 
       // //#endif
@@ -129,8 +149,8 @@
             const code = res.code
             const response = await loginByWechat({ code })
             if (response.code === 200) {
-              this_.onSuccess(response.data)
-            } 
+              this_.onSuccess(response.data, 1)
+            }
             else {
               uni.login({
                 success: async function (res) {
@@ -138,11 +158,11 @@
                   if (registerRes.code === 200) {
                     console.log(registerRes.data.openId)
                     localStorage.setItem("openId", openId)
-                    this_.onSuccess(registerRes.data)
-                  } 
+                    this_.onSuccess(registerRes.data, 1)
+                  }
                 }
-              })            
-            }        
+              })
+            }
           }
         })
       }
@@ -155,8 +175,8 @@ page {
   height: 100%;
 }
 
-checkbox .wx-checkbox-input { 
-  border-radius: 50%;/*圆角*/ width: 35rpx;/*背景的宽*/ height: 35rpx;/*背景的高*/ 
+checkbox .wx-checkbox-input {
+  border-radius: 50%;/*圆角*/ width: 35rpx;/*背景的宽*/ height: 35rpx;/*背景的高*/
 }
 
 checkbox .wx-checkbox-input.wx-checkbox-input-checked::before{
@@ -191,12 +211,14 @@ checkbox .wx-checkbox-input.wx-checkbox-input-checked::before{
 
 .login {
   display: flex;
+
   flex-direction: column;
   height: 60vh;
   padding: 40rpx 20rpx 20rpx;
 
   .input {
     width: 100%;
+    margin-top: 20px;
     height: 80rpx;
     font-size: 28rpx;
     border-radius: 72rpx;
@@ -292,6 +314,18 @@ checkbox .wx-checkbox-input.wx-checkbox-input-checked::before{
   display: flex;
   position: absolute;
   bottom: 80rpx;
+  left: 50%;
+  transform: translate(-50%);
+  right: 20rpx;
+  font-size: 22rpx;
+  color: #999;
+  text-align: center;
+  width: 500rpx;
+  align-items: center;
+}
+.admin {
+  position: absolute;
+  bottom: 20rpx;
   left: 50%;
   transform: translate(-50%);
   right: 20rpx;

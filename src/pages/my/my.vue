@@ -1,12 +1,15 @@
 
 <script lang="ts" setup>
-import profile from '@/components/profile.vue'
+//import profile from '@/components/profile.vue'
 
 import type { MemberItem } from '@/types/member'
 import { getMemberInfo } from '@/services/member'
 import { onMounted, ref } from 'vue'
 import { useMemberStore } from '@/stores'
+import { useRoleStore } from '@/stores/index'
 const memberStore = useMemberStore()
+const roleStore = useRoleStore()
+
 
 const member = ref<MemberItem>()
 
@@ -17,12 +20,13 @@ const getMemberData = async () => {
 const priviledges = ref()
 
 onMounted(async () => {
+
+  console.log("role", roleStore.role)
   if (memberStore.profile) {
     await getMemberData()
   } else {
     member.value = {
       couponNum: 0,
-      couponCodeNum: 0,
       vipLevel: 0,
       points: 0
     }
@@ -37,34 +41,27 @@ onMounted(async () => {
     },
     {
       id: 2,
-      name: '购物券',
-      title: `${member.value?.couponCodeNum}张`,
-      type: 1
-    },
-    {
-      id: 2,
-      name: '会员等级',
+      name: '会员中心',
       title: `VIP${member.value?.vipLevel}`,
       type: 1
     },
-    // {
-    //   id: 3,
-    //   name: '积分',
-    //   title: member.value?.points,
-    //   type: 2
-    // }
-
+    {
+      id: 3,
+      name: '积分',
+      title: member.value?.points,
+      type: 1
+    }
   ]
 
 })
 // 获取屏幕边界到安全区域距离
 const { safeAreaInsets } = uni.getSystemInfoSync()
 const orderTypes = [
-    { type: '1', text: '待付款', icon: 'icon-currency' },
-    { type: '2', text: '待发货', icon: 'icon-gift' },
-    { type: '3', text: '待收货', icon: 'icon-check' },
-    { type: '4', text: '待评价', icon: 'icon-comment' },
-  ]
+  { type: '1', text: '待付款', icon: 'icon-currency' },
+  { type: '2', text: '待发货', icon: 'icon-gift' },
+  { type: '3', text: '待收货', icon: 'icon-check' },
+  { type: '4', text: '待评价', icon: 'icon-comment' },
+]
 const memberTypes = [
   {
     type: '1', text: '会员免运费',
@@ -108,11 +105,8 @@ const memberTypes = [
       <!-- 情况2：未登录 -->
       <view class="overview" v-else>
         <navigator url="/pages/login/login" hover-class="none">
-          <image
-            class="avatar gray"
-            mode="aspectFit"
-            src="https://image.familystudy.cn/image/jxfruit/%E6%AD%A3%E5%BC%8Flogo.webp"
-          ></image>
+          <image class="avatar gray" mode="aspectFit"
+            src="https://image.familystudy.cn/image/jxfruit/%E6%AD%A3%E5%BC%8Flogo.webp"></image>
         </navigator>
         <view class="meta">
           <navigator url="/pages/login/login" hover-class="none" class="nickname">
@@ -131,22 +125,23 @@ const memberTypes = [
     <view class="orders member">
       <view class="title" style="padding-left: 20rpx;">
          会员中心
-        <navigator class="navigator" url="/pagesMember/member-center/member-center" hover-class="none">
+        <navigator class="navigator" 
+        v-if="roleStore.role === 1"
+        url="/pagesMember/member-center/member-center" hover-class="none">
           全部<text class="icon-right"></text>
+        </navigator>
+        <navigator class="navigator" 
+        v-if="roleStore.role === 2"
+        url="/pagesAdmin/goodsManage/goodsManage" hover-class="none">
+          商品管理<text class="icon-right"></text>
         </navigator>
       </view>
       <view class="section">
         <!-- 订单 -->
-        <navigator
-          v-for="item in memberTypes"
-          :key="item.type"
-          url="/pagesMember/member-center/member-center"
-          class="navigator"
-          hover-class="none"
-          style=" padding-bottom: 15rpx;"
-        >
-        <image :src="item.imgUrl" mode="aspectFit" style="margin-bottom: 10rpx;"></image>
-        <view style="">{{ item.text }}</view>
+        <navigator v-for="item in memberTypes" :key="item.type" url="/pages/coming-soon/coming-soon" class="navigator"
+          hover-class="none" style=" padding-bottom: 15rpx;">
+          <image :src="item.imgUrl" mode="aspectFit" style="margin-bottom: 10rpx;"></image>
+          <view style="">{{ item.text }}</view>
         </navigator>
         <!-- 客服 -->
         <!-- #ifdef MP-WEIXIN -->
@@ -159,25 +154,25 @@ const memberTypes = [
     <view class="orders">
       <view class="title">
         我的订单
+
         <navigator class="navigator"
-        :url="memberStore.profile?
-          '/pagesOrder/list/list?type=0':'/pages/login/login'"
-        hover-class="none">
+          :url="memberStore.profile ? '/pagesOrder/list/list?type=0' : '/pages/login/login'"
+          hover-class="none"
+          v-if="roleStore.role === 1"
+        >
           全部<text class="icon-right"></text>
+        </navigator>
+        <navigator class="navigator"
+          v-if="roleStore.role === 2"
+          :url="memberStore.profile ? '/pagesAdmin/orderManage/orderManage' : '/pages/login/login'" hover-class="none">
+          订单管理<text class="icon-right"></text>
         </navigator>
       </view>
       <view class="section">
         <!-- 订单 -->
-        <navigator
-          v-for="item in orderTypes"
-          :key="item.type"
-          :class="item.icon"
-          :url="memberStore.profile?
+        <navigator v-for="item in orderTypes" :key="item.type" :class="item.icon" :url="memberStore.profile ?
           `/pagesOrder/list/list?type=${item.type}`
-          :'/pages/login/login'"
-          class="navigator"
-          hover-class="none"
-        >
+          : '/pages/login/login'" class="navigator" hover-class="none">
           {{ item.text }}
         </navigator>
 
@@ -186,25 +181,29 @@ const memberTypes = [
     <view class="orders">
       <view class="title">
         我的权益
-        <navigator
-          class="navigator"
-          :url="memberStore.profile?
-          '/pagesMember/priviledge/priviledge?type=0':'/pages/login/login'"
-          hover-class="none">
+        <navigator v-if="roleStore.role === 1"
+        class="navigator" :url="memberStore.profile ?
+          '/pagesMember/priviledge/priviledge' : '/pages/login/login'" hover-class="none">
           全部<text class="icon-right"></text>
+        </navigator>
+        <navigator class="navigator" 
+          v-if="roleStore.role === 2"
+          :url="memberStore.profile ?
+          '/pagesAdmin/couponManage/couponManage' : '/pages/login/login'" hover-class="none">
+          优惠券管理<text class="icon-right"></text>
+        </navigator>
+        <navigator class="navigator" 
+          v-if="roleStore.role === 2"
+          :url="memberStore.profile ?
+          '/pagesAdmin/qrCodeVerify/qrCodeVerify' : '/pages/login/login'" hover-class="none">
+          购物券管理<text class="icon-right"></text>
         </navigator>
       </view>
       <view class="section">
-        <!-- 订单 -->
-        <navigator
-          v-for="item in priviledges"
-          :key="item.id"
-          :url="memberStore.profile?
-          `/pagesMember/priviledge/priviledge?type=${item.type}`:
-          '/pages/login/login'"
-          class="navigator"
-          hover-class="none"
-        >
+        <!-- 权益 -->
+        <navigator v-for="item in priviledges" :key="item.id" :url="memberStore.profile ?
+          `/pagesMember/priviledge/priviledge?type=${item.type}` :
+          '/pages/login/login'" class="navigator" hover-class="none">
           <view class="priviledge-title">
             {{ item.title }}
           </view>
@@ -223,7 +222,7 @@ page {
   height: 100%;
   padding: 0;
   overflow: hidden;
-  background-image: linear-gradient(rgb(255,255,246),rgb(255, 255, 236));
+  background-image: linear-gradient(rgb(255, 255, 246), rgb(255, 255, 236));
 }
 
 .priviledge-title {
@@ -244,7 +243,7 @@ page {
 
 /* 用户信息 */
 .profile {
-  background-color: rgb(255,234,189);
+  background-color: rgb(255, 234, 189);
   height: 280rpx;
   color: black;
   position: relative;
@@ -283,13 +282,13 @@ page {
     margin-left: 20rpx;
 
     .nickname {
-    max-width: 180rpx;
-    margin-bottom: 16rpx;
-    font-size: 30rpx;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
+      max-width: 180rpx;
+      margin-bottom: 16rpx;
+      font-size: 30rpx;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
 
     .extra {
       display: flex;
@@ -307,7 +306,7 @@ page {
     padding: 3rpx 10rpx 1rpx;
     color: rgba(255, 255, 255, 0.8);
     color: black;
-    border: 1rpx solid rgba(0,0,0, 0.8);
+    border: 1rpx solid rgba(0, 0, 0, 0.8);
     margin-right: 10rpx;
     border-radius: 30rpx;
   }
@@ -335,7 +334,7 @@ page {
   box-shadow: 0 4rpx 6rpx rgba(240, 240, 240, 0.6);
 
   .member {
-    background-color:rgb(255, 240, 228);
+    background-color: rgb(255, 240, 228);
   }
 
   .title {
@@ -358,20 +357,24 @@ page {
     display: flex;
     justify-content: space-between;
     padding: 40rpx 20rpx 40rpx;
+
     .navigator,
     .contact {
       text-align: center;
       font-size: 24rpx;
       color: #333;
+
       &::before {
         display: block;
         font-size: 60rpx;
         color: #ff9545;
       }
+
       &::after {
         border: none;
       }
     }
+
     .contact {
       padding: 0;
       margin: 0;

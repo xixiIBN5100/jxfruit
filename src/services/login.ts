@@ -5,10 +5,10 @@ import { http } from "@/utils/http"
  * 传统登录 用户名 密码
  * @param data
  */
-export const loginByPwd = (data: LoginParams) => {
+export const loginByPwd = (data: LoginParams, role: number) => {
     return http<LoginResult>({
         method: 'POST',
-        url: '/login',
+        url: `/login/${role}`,
         data
     })
 }
