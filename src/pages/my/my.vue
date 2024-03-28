@@ -35,7 +35,6 @@ onMounted(async () => {
       title: `${member.value?.couponNum}张`,
       type: 0
     },
-
     {
       id: 2,
       name: '购物券',
@@ -54,6 +53,7 @@ onMounted(async () => {
     //   title: member.value?.points,
     //   type: 2
     // }
+
   ]
 
 })

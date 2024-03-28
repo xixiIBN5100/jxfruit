@@ -91,8 +91,6 @@
         memberStore.setProfile(profile)
         // 成功提示
         uni.showToast({ icon: 'success', title: '登录成功' })
-
-
         setTimeout(() => {
             // 页面跳转
           uni.navigateBack()

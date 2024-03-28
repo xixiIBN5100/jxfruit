@@ -19,8 +19,8 @@ onLoad(() => {
 })
 const priviledgeTabs = ref([
   { priviledgeType: 0, title: '优惠券' },
-  // { priviledgeType: 1, title: '会员' },
   { priviledgeType: 1, title: '购物券' }
+
 ])
 // 高亮下标
 const activeIndex = ref(priviledgeTabs.value.findIndex((v) => v.priviledgeType === Number(query.type)))

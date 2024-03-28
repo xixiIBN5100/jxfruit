@@ -150,10 +150,7 @@ const recharge = () => {
   uni.showModal({
     title: '敬请期待'
   })
-
 }
-
-
 
 // 是否触发下拉刷新
 const isTriggered = ref(false)
@@ -411,57 +408,8 @@ const onScrolltolower = async () => {
           margin-right: 40rpx;
           font-size: 35rpx;
         }
-
-        .button-hover {
-          background-color: #092da1;
-          color: red;
-          opacity: 0.8;
-        }
       }
-
     }
-
-
-  }
-
-}
-
-.scroll {
-  background-color: #9fddfa;
-  height: 100vh;
-  width: 750rpx;
-
-}
-
-.tabs {
-  display: flex;
-
-  justify-content: space-around;
-  line-height: 60rpx;
-  margin: 0 0rpx;
-  background-color: #fff;
-  box-shadow: 0 4rpx 6rpx rgba(240, 240, 240, 0.6);
-  position: relative;
-  z-index: 9;
-
-  .item {
-    flex: 1;
-    text-align: center;
-    padding: 20rpx;
-    font-size: 28rpx;
-    color: #262626;
-  }
-
-  .cursor {
-    position: absolute;
-    left: 0;
-    bottom: 0;
-    width: 18%;
-    height: 6rpx;
-    padding: 0 50rpx;
-    background-color: rgb(41, 205, 131);
-    /* 过渡效果 */
-    transition: all 0.25s;
   }
 }
 
