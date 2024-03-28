@@ -43,12 +43,33 @@ export type RefundItem = {
     reason: string
 }
 
+// 修改选中状态-单品修改
+const onChangeSelected = (item: CartGoodsItem) => {
+  // 前端数据更新-是否选中取反
+  item.selected = !item.selected
+  if (selectedCartListCount.value > 0) {
+    wx.setTabBarBadge({//tabbar右上角添加文本
+      index: 2,//tabbar下标
+      text: String(selectedCartListCount.value) //显示的内容,必须为字符串可通过toString()将number转为字符串
+    })
+  } else {
+    wx.removeTabBarBadge({
+      index: 2
+    })
+  }
+  // 后端数据更新
+  putMemberCartSelected(item.id)
+}
+
+
+
 const submitRefund = async () => {
     const amountWithFloat = Number(amount.value).toFixed(2)
     let data = {
         orderId: Number(query.orderId),
         amount: Number(amount.value).toFixed(2),
-        reason: reason.value 
+        reason: reason.value,
+        skuIds: [84]
     }
     const res = await submitRefundData(data)
     if (res.code === 200) {
@@ -74,7 +95,15 @@ const submitRefund = async () => {
       :url="`/pagesOrder/detail/detail?id=${orderInfo.orderId}`"
       hover-class="none"
     >
+    
+   
+
     <view class="cover">
+      <text
+      @tap="onChangeSelected(item)"
+      class="checkbox"
+      :class="{ checked: item.selected }"
+    ></text>
       <image class="image" mode="aspectFit" :src="item.thumbNail"></image>
     </view>
     <view class="meta">
@@ -214,4 +243,31 @@ const submitRefund = async () => {
   .text {
     width: 400rpx;
   }
+
+
+
+  .checkbox {
+      position: absolute;
+      top: 0;
+      left: 0;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 80rpx;
+      height: 100%;
+
+      &::before {
+        content: '\e6cd';
+        font-family: 'erabbit' !important;
+        font-size: 40rpx;
+        color: #444;
+      }
+
+      &.checked::before {
+        content: '\e6cc';
+        color:  rgb(255,234,189);
+      }
+    }
+
 </style>
