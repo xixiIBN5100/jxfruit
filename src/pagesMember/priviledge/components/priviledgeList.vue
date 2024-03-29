@@ -26,36 +26,7 @@ const couponCodeParams = ref<PageParams>({
 
 
 const couponCodeList = ref<CouponCode[]>([
-  {
-    couponCodeId: 1,
-    codeNo: "123123",
-    userId: 43,
-    verified: 0,
-    scale: "规格2",
-    price: 20.0,
-    goodsName: "购物券",
-    description: "满30减8"
-  },
-  {
-    couponCodeId: 2,
-    codeNo: "123123",
-    userId: 43,
-    verified: 0,
-    scale: "规格2",
-    price: 20.0,
-    goodsName: "购物券",
-    description: "满30减8"
-  },
-  {
-    couponCodeId: 3,
-    codeNo: "123123",
-    userId: 43,
-    verified: 0,
-    scale: "规格2",
-    price: 20.0,
-    goodsName: "购物券",
-    description: "满30减8"
-  }
+
 ])
 
 var pageParams = {
@@ -65,9 +36,10 @@ var pageParams = {
 
 //查询券码列表
 const onQueryCodeList = async () => {
- 
   const res = await queryCouponCodeList(pageParams)
-  couponCodeList.value.push(...res.data)
+ 
+  couponCodeList.value.push(...res.data.records)
+  console.log("data", couponCodeList.value)
 }
 
 //跳转到查询券码页面，并携带页面参数couponCodeId
@@ -85,7 +57,6 @@ const onNavigate = () => {
 onShow(()=> {
   onQueryCodeList()
 })
-
 
 // 优惠券子类列表(前端自定义)
 const subTypes = ref<(SubTypeItem & { isFinish?: boolean })[]>([

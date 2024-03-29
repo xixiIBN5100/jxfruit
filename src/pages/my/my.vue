@@ -20,13 +20,13 @@ const getMemberData = async () => {
 const priviledges = ref()
 
 onMounted(async () => {
-
   console.log("role", roleStore.role)
   if (memberStore.profile) {
     await getMemberData()
   } else {
     member.value = {
       couponNum: 0,
+      couponCodeNum: 0,
       vipLevel: 0,
       points: 0
     }
@@ -38,21 +38,20 @@ onMounted(async () => {
       name: '优惠券',
       title: `${member.value?.couponNum}张`,
       type: 0
-    },
+    },    
     {
       id: 2,
-      name: '会员中心',
-      title: `VIP${member.value?.vipLevel}`,
+      name: '核销券',
+      title:`${member.value?.couponCodeNum}张`,
       type: 1
     },
     {
       id: 3,
-      name: '积分',
-      title: member.value?.points,
+      name: '会员中心',
+      title: `VIP${member.value?.vipLevel}`,
       type: 1
-    }
+    },
   ]
-
 })
 // 获取屏幕边界到安全区域距离
 const { safeAreaInsets } = uni.getSystemInfoSync()

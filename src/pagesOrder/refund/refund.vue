@@ -69,7 +69,7 @@ const submitRefund = async () => {
         orderId: Number(query.orderId),
         amount: Number(amount.value).toFixed(2),
         reason: reason.value,
-        skuIds: [84]
+        skuIds: [query.id]
     }
     const res = await submitRefundData(data)
     if (res.code === 200) {
@@ -96,8 +96,6 @@ const submitRefund = async () => {
       hover-class="none"
     >
     
-   
-
     <view class="cover">
       <text
       @tap="onChangeSelected(item)"

@@ -15,6 +15,18 @@ import { ref } from 'vue'
 import PageSkeleton from './components/PageSkeleton.vue'
 import { getPayWxPayMiniPay, wxPay} from '@/services/pay'
 
+const refundState = [
+  {
+    name: '申请退款'
+  },
+  {
+    name: '退款处理中'
+  },
+  {
+    name: '已退款'
+  }
+]
+
 // 获取屏幕边界到安全区域距离
 const { safeAreaInsets } = uni.getSystemInfoSync()
 
@@ -321,7 +333,8 @@ const onOrderCancel = async () => {
                   @tap.stop="onComment(item.goodsId)" class="button"> 去评价 
                 </view>
                 <view v-if="order.orderState !== OrderState.DaiFuKuan"
-                  @tap.stop="onRefund(item.id)" class="button refund"> 申请退款 
+                  @tap.stop="onRefund(item.id)" class="button refund"> 
+                  {{ refundState[item.refundState].name }}                  
                 </view>
                 <view class="quantity">x{{ item.num }}</view>
             </view>

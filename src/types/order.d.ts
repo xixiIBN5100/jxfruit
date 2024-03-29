@@ -1,4 +1,5 @@
-import type { GoodsItem } from './goods'
+import type { AddressItem } from './address'
+import type { GoodsItem, SkuItem } from './goods'
 
 export type OrderItem = {
   id: number
@@ -9,6 +10,22 @@ export type OrderItem = {
   addressId: number
   notes: string
   orderState: number
+}
+
+export type OrderRefundItem = {
+  address: AddressItem,
+  nickname: string,
+  notes: string,
+  orderId: number,
+  orderState: number,
+  orderTradeNo: string,
+  payMoney: number,
+  postFee: number,
+  skus: SkuItem[],
+  submitTime: string,
+  totalMoney: Number,
+  totalNum: number,
+  userId: number
 }
 
 export type OrderPreResult = {
