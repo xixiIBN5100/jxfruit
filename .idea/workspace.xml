@@ -5,12 +5,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="833da7bf-efbd-4934-a02f-b4fb823f9512" name="更改" comment="">
-      <change afterPath="$PROJECT_DIR$/src/services/adminOrder.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/pagesAdmin/orderDetails/orderDetails.vue" beforeDir="false" afterPath="$PROJECT_DIR$/src/pagesAdmin/orderDetails/orderDetails.vue" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/pagesAdmin/orderManage/components/orderList.vue" beforeDir="false" afterPath="$PROJECT_DIR$/src/pagesAdmin/orderManage/components/adminList.vue" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/pagesAdmin/orderManage/orderManage.vue" beforeDir="false" afterPath="$PROJECT_DIR$/src/pagesAdmin/orderManage/orderManage.vue" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/types/order.d.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/types/order.d.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/pages.json" beforeDir="false" afterPath="$PROJECT_DIR$/src/pages.json" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -65,24 +61,29 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;ASKED_ADD_EXTERNAL_FILES&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;WebServerToolWindowFactoryState&quot;: &quot;false&quot;,
-    &quot;last_opened_file_path&quot;: &quot;E:/jxfruit&quot;,
-    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
-    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
-    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
-    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;prettierjs.PrettierConfiguration.Package&quot;: &quot;E:\\jxfruit\\node_modules\\prettier&quot;,
-    &quot;ts.external.directory.path&quot;: &quot;E:\\jxfruit\\node_modules\\typescript\\lib&quot;,
-    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ASKED_ADD_EXTERNAL_FILES": "true",
+    "RunOnceActivity.OpenProjectViewOnStart": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "WebServerToolWindowFactoryState": "false",
+    "git-widget-placeholder": "master",
+    "last_opened_file_path": "/Users/xi/Desktop/jxfruit",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "prettierjs.PrettierConfiguration.Package": "E:\\jxfruit\\node_modules\\prettier",
+    "ts.external.directory.path": "E:\\jxfruit\\node_modules\\typescript\\lib",
+    "vue.rearranger.settings.migration": "true"
   }
-}</component>
+}]]></component>
   <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$" />
+      <recent name="$PROJECT_DIR$/node_modules" />
+    </key>
     <key name="MoveFile.RECENT_KEYS">
       <recent name="E:\jxfruit\src\pagesAdmin\orderDetails" />
       <recent name="E:\jxfruit\src\pagesAdmin\orderManage" />

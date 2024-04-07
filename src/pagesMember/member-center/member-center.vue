@@ -2,8 +2,7 @@
 import type { MemberItem } from '@/types/member'
 import { computed, onMounted, ref, watch } from 'vue'
 import { useMemberStore } from '@/stores'
-import { getMemberInfo } from '@/services/member'
-
+import { getLotteryCoupon, getMemberInfo } from '@/services/member'
 const newuseMemberStore = useMemberStore()
 const memberInfo = getMemberInfo()
 const level = ref()
@@ -15,7 +14,11 @@ const couponData = {
 const showToast = () => {
   uni.showModal({
     title: '会员须知',
-    content: '当前该等级会员: ' + memberInfomation.value.requirement + '\n' +memberInfomation.value.treatment
+    content:
+      '当前该等级会员: ' +
+      memberInfomation.value.requirement +
+      '\n' +
+      memberInfomation.value.treatment,
   })
 }
 
@@ -71,16 +74,32 @@ const memberTypes = [
   },
 ]
 
-
+const handleLottery = async () => {
+  const res = await getLotteryCoupon()
+  console.log(res)
+  if (res.msg === 'success') {
+    await uni.showModal({
+      title: '抽奖结果',
+      content: `恭喜你抽中满${res.data.effectivePrice}减${res.data.price}的优惠券！`,
+    })
+  } else {
+    await uni.showModal({
+      title: '抽奖结果',
+      content: `谢谢惠顾`,
+    })
+  }
+}
 </script>
 <template>
   <view class="box">
     <div class="membercontainer">
-      <swiper-item @click='showToast'>
-        <view class="card" :style="{ backgroundColor: cardColor }">
+      <swiper-item>
+        <view class="card" :style="{ backgroundColor: cardColor }" @click="showToast">
           <text class="member">{{ level }}</text>
           <view style="width: 300rpx; margin-left: 90rpx; margin-top: 40rpx">
-            <text style="font-size: 20rpx; margin-top: 10rpx">0目前距离升级还需要消费{{ diff }} </text>
+            <text style="font-size: 20rpx; margin-top: 10rpx"
+              >0目前距离升级还需要消费{{ diff }}
+            </text>
             <progress :percent="0" :active="true" :border-radius="3" :stroke-width="3"></progress>
             <img src="../../static/images/jx_logo.png" class="image" />
           </view>
@@ -104,10 +123,14 @@ const memberTypes = [
       </view>
       <view class="children1">
         <text class="title1">专享免减券</text>
-
       </view>
       <view class="children1">
         <text class="title1">抽优惠券</text>
+        <div style="padding: 20px">
+          <button style="background: #61d272; width: 80%; border-radius: 4px" @tap="handleLottery">
+            点击抽取优惠券
+          </button>
+        </div>
       </view>
     </view>
   </view>
@@ -208,7 +231,7 @@ const memberTypes = [
 
   .children1 {
     width: 100%;
-    height: 280rpx;
+    height: 250rpx;
     background-color: burlywood;
     border-radius: 60rpx;
     padding: 20rpx;
