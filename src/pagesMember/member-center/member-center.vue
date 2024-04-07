@@ -3,7 +3,6 @@ import type { MemberItem } from '@/types/member'
 import { computed, onMounted, ref, watch } from 'vue'
 import { useMemberStore } from '@/stores'
 import { getLotteryCoupon, getMemberInfo } from '@/services/member'
-const newuseMemberStore = useMemberStore()
 const memberInfo = getMemberInfo()
 const level = ref()
 const memberInfomation = ref()
