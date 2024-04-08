@@ -5,8 +5,9 @@ import { useMemberStore } from '@/stores'
 import { getLotteryCoupon, getMemberInfo } from '@/services/member'
 const memberInfo = getMemberInfo()
 const level = ref()
-const memberInfomation = ref()
+const memberInformation = ref()
 const diff = ref()
+const birthdayGift = ref()
 const couponData = {
   isFlipped: false,
 }
@@ -15,20 +16,21 @@ const showToast = () => {
     title: '会员须知',
     content:
       '当前该等级会员: ' +
-      memberInfomation.value.requirement +
+      memberInformation.value.requirement +
       '\n' +
-      memberInfomation.value.treatment,
+      memberInformation.value.treatment,
   })
 }
 
 const variable = ref() // 初始化变量
 memberInfo
   .then((result) => {
-    memberInfomation.value = result.data.membership
-    console.log(memberInfomation.value)
-    diff.value = memberInfomation.value.diffToNextLevel
-    level.value = memberInfomation.value.name
-    variable.value = memberInfomation.value.vipLevel
+    memberInformation.value = result.data.membership
+    console.log(memberInformation.value)
+    diff.value = memberInformation.value.diffToNextLevel
+    level.value = memberInformation.value.name
+    variable.value = memberInformation.value.vipLevel
+    birthdayGift.value = memberInformation.value.birthdayGift
   })
   .catch((error) => {
     // 处理错误
@@ -119,9 +121,15 @@ const handleLottery = async () => {
     <view class="container">
       <view class="children1">
         <text class="title1">会员免运费</text>
+        <div style='display: flex;justify-content: center;align-items: center;height: 70%'>
+          <span style='font-size: 1.5rem'>敬请期待</span>
+        </div>
       </view>
       <view class="children1">
         <text class="title1">专享免减券</text>
+        <div style='display: flex;justify-content: center;align-items: center;height: 70%'>
+          <span style='font-size: 1.15rem'>生日礼:&ensp;{{ birthdayGift }}</span>
+        </div>
       </view>
       <view class="children1">
         <text class="title1">抽优惠券</text>
