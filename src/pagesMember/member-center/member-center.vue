@@ -11,17 +11,24 @@ const birthdayGift = ref()
 const couponData = {
   isFlipped: false,
 }
+const levelMap = new Map([
+  ['白银会员', '暂时还没有哦'],
+  ['黄金会员', '满20减5优惠券1张'],
+  ['铂金会员', '满20减5优惠券2张\n满50减10优惠券1张'],
+  ['钻石会员', '满20减5优惠券2张\n满50减10优惠券1张'],
+  ['星耀会员', '满20减5优惠券2张\n满50减10优惠券1张\n10元无门槛优惠券3张'],
+])
 const showToast = () => {
   uni.showModal({
     title: '会员须知',
     content:
       '当前该等级会员: ' +
       memberInformation.value.requirement +
-      '\n' +
+      '\r\n' +
       memberInformation.value.treatment,
   })
 }
-
+const coupon = ref()
 const variable = ref() // 初始化变量
 memberInfo
   .then((result) => {
@@ -31,6 +38,7 @@ memberInfo
     level.value = memberInformation.value.name
     variable.value = memberInformation.value.vipLevel
     birthdayGift.value = memberInformation.value.birthdayGift
+    coupon.value = levelMap.get(level.value)
   })
   .catch((error) => {
     // 处理错误
@@ -51,7 +59,7 @@ const cardColor = computed(() => {
       return '#b95b09'
   }
 })
-
+console.log(coupon)
 const memberTypes = [
   {
     type: 'a1',
@@ -127,8 +135,9 @@ const handleLottery = async () => {
       </view>
       <view class="children1">
         <text class="title1">专享免减券</text>
-        <div style='display: flex;justify-content: center;align-items: center;height: 70%'>
-          <span style='font-size: 1.15rem'>生日礼:&ensp;{{ birthdayGift }}</span>
+        <div style='font-size: 0.9rem;display: flex;height: 70%;flex-flow: column;justify-content: center;margin-left: 4%;margin-top: 6px'>
+          <div>生日礼:&ensp;{{ birthdayGift }}</div>
+          <view><text>会员礼:&ensp;<text style='display: inline-flex;justify-content: start'>{{ coupon }}</text></text></view>
         </div>
       </view>
       <view class="children1">

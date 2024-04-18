@@ -4,9 +4,10 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="833da7bf-efbd-4934-a02f-b4fb823f9512" name="更改" comment="">
+    <list default="true" id="833da7bf-efbd-4934-a02f-b4fb823f9512" name="更改" comment="feat:增加查看优惠券功能">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/pages.json" beforeDir="false" afterPath="$PROJECT_DIR$/src/pages.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/pages/my/my.vue" beforeDir="false" afterPath="$PROJECT_DIR$/src/pages/my/my.vue" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/pagesMember/member-center/member-center.vue" beforeDir="false" afterPath="$PROJECT_DIR$/src/pagesMember/member-center/member-center.vue" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -17,6 +18,7 @@
     <option name="RECENT_TEMPLATES">
       <list>
         <option value="Vue Single File Component" />
+        <option value="HTTP Request" />
         <option value="TypeScript File" />
       </list>
     </option>
@@ -53,6 +55,9 @@
   <component name="MarkdownSettingsMigration">
     <option name="stateVersion" value="1" />
   </component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 8
+}</component>
   <component name="ProjectId" id="2ZIBuCLuk2JGGk882dhAoblgYnl" />
   <component name="ProjectLevelVcsManager" settingsEditedManually="true">
     <ConfirmationsSetting value="2" id="Add" />
@@ -61,24 +66,24 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "ASKED_ADD_EXTERNAL_FILES": "true",
-    "RunOnceActivity.OpenProjectViewOnStart": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "WebServerToolWindowFactoryState": "false",
-    "git-widget-placeholder": "master",
-    "last_opened_file_path": "/Users/xi/Desktop/jxfruit",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "prettierjs.PrettierConfiguration.Package": "E:\\jxfruit\\node_modules\\prettier",
-    "ts.external.directory.path": "E:\\jxfruit\\node_modules\\typescript\\lib",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;ASKED_ADD_EXTERNAL_FILES&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;WebServerToolWindowFactoryState&quot;: &quot;false&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;master&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/Users/xi/Desktop/jxfruit&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;prettierjs.PrettierConfiguration.Package&quot;: &quot;E:\\jxfruit\\node_modules\\prettier&quot;,
+    &quot;ts.external.directory.path&quot;: &quot;/Users/xi/Desktop/jxfruit/node_modules/typescript/lib&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$" />
@@ -111,7 +116,44 @@
       <workItem from="1706856131632" duration="10494000" />
       <workItem from="1706878981273" duration="3710000" />
       <workItem from="1708409379808" duration="2146000" />
+      <workItem from="1712488560227" duration="4255000" />
+      <workItem from="1712549747101" duration="1751000" />
+      <workItem from="1713254024982" duration="597000" />
+      <workItem from="1713436737343" duration="3593000" />
     </task>
+    <task id="LOCAL-00001" summary="feat:增加抽取优惠券功能">
+      <option name="closed" value="true" />
+      <created>1712492353727</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1712492353728</updated>
+    </task>
+    <task id="LOCAL-00002" summary="feat:增加抽取优惠券功能">
+      <option name="closed" value="true" />
+      <created>1712492399851</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1712492399851</updated>
+    </task>
+    <task id="LOCAL-00003" summary="feat:增加抽取优惠券功能">
+      <option name="closed" value="true" />
+      <created>1712492450021</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1712492450021</updated>
+    </task>
+    <task id="LOCAL-00004" summary="feat:增加查看优惠券功能">
+      <option name="closed" value="true" />
+      <created>1712551485150</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1712551485150</updated>
+    </task>
+    <option name="localTasksCounter" value="5" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -142,5 +184,8 @@
   </component>
   <component name="VcsManagerConfiguration">
     <option name="ADD_EXTERNAL_FILES_SILENTLY" value="true" />
+    <MESSAGE value="feat:增加抽取优惠券功能" />
+    <MESSAGE value="feat:增加查看优惠券功能" />
+    <option name="LAST_COMMIT_MESSAGE" value="feat:增加查看优惠券功能" />
   </component>
 </project>
